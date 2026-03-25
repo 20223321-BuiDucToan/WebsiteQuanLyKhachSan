@@ -11,8 +11,13 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
-    })
+
+
+        $middleware->alias([
+        'kiem_tra_tai_khoan_hoat_dong' => \App\Http\Middleware\KiemTraTaiKhoanHoatDong::class,
+        'kiem_tra_vai_tro' => \App\Http\Middleware\KiemTraVaiTro::class,
+    ]);
+    })  
     ->withExceptions(function (Exceptions $exceptions): void {
         //
     })->create();

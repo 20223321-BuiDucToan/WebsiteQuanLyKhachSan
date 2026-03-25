@@ -8,26 +8,41 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('nguoi_dung', function (Blueprint $table) {
-            $table->id();
-            $table->string('ho_ten', 100);
-            $table->string('ten_dang_nhap', 50)->unique();
-            $table->string('email', 100)->unique();
-            $table->string('password');
-            $table->string('so_dien_thoai', 20)->nullable();
-            $table->string('dia_chi')->nullable();
-            $table->string('anh_dai_dien')->nullable();
-            $table->string('vai_tro', 30)->default('nhan_vien');
-            $table->string('trang_thai', 30)->default('hoat_dong');
-            $table->timestamp('lan_dang_nhap_cuoi')->nullable();
-            $table->timestamp('email_verified_at')->nullable();
-            $table->rememberToken();
-            $table->timestamps();
+        Schema::table('nguoi_dung', function (Blueprint $table) {
+            if (!Schema::hasColumn('nguoi_dung', 'so_dien_thoai')) {
+                $table->string('so_dien_thoai', 20)->nullable()->after('password');
+            }
+
+            if (!Schema::hasColumn('nguoi_dung', 'dia_chi')) {
+                $table->string('dia_chi')->nullable()->after('so_dien_thoai');
+            }
+
+            if (!Schema::hasColumn('nguoi_dung', 'anh_dai_dien')) {
+                $table->string('anh_dai_dien')->nullable()->after('dia_chi');
+            }
+
+            if (!Schema::hasColumn('nguoi_dung', 'vai_tro')) {
+                $table->enum('vai_tro', ['admin', 'nhan_vien'])->default('nhan_vien')->after('anh_dai_dien');
+            }
+
+            if (!Schema::hasColumn('nguoi_dung', 'trang_thai')) {
+                $table->enum('trang_thai', ['hoat_dong', 'tam_khoa'])->default('hoat_dong')->after('vai_tro');
+            }
+
+            if (!Schema::hasColumn('nguoi_dung', 'lan_dang_nhap_cuoi')) {
+                $table->timestamp('lan_dang_nhap_cuoi')->nullable()->after('trang_thai');
+            }
+
+            if (!Schema::hasColumn('nguoi_dung', 'remember_token')) {
+                $table->rememberToken();
+            }
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('nguoi_dung');
+        Schema::table('nguoi_dung', function (Blueprint $table) {
+            //
+        });
     }
 };

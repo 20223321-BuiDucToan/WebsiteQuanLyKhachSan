@@ -8,27 +8,28 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('loai_phong', function (Blueprint $table) {
+        Schema::create('khach_hang', function (Blueprint $table) {
             $table->id();
-            $table->string('ma_loai_phong', 20)->unique();
-            $table->string('ten_loai_phong', 100)->unique();
-            $table->text('mo_ta')->nullable();
-            $table->decimal('gia_mot_dem', 12, 2);
-            $table->unsignedInteger('so_nguoi_toi_da')->default(1);
-            $table->decimal('dien_tich', 8, 2)->nullable();
-            $table->unsignedInteger('so_giuong')->default(1);
-            $table->string('loai_giuong', 50)->nullable();
-            $table->unsignedInteger('so_phong_tam')->default(1);
-            $table->boolean('co_ban_cong')->default(false);
-            $table->boolean('co_bep_rieng')->default(false);
-            $table->boolean('co_huong_bien')->default(false);
+            $table->string('ma_khach_hang', 20)->unique();
+            $table->string('ho_ten', 100);
+            $table->string('gioi_tinh', 20)->nullable();
+            $table->date('ngay_sinh')->nullable();
+            $table->string('so_dien_thoai', 20)->nullable();
+            $table->string('email', 100)->nullable();
+            $table->string('so_giay_to', 50)->nullable();
+            $table->string('loai_giay_to', 30)->nullable();
+            $table->string('dia_chi')->nullable();
+            $table->string('quoc_tich', 50)->nullable();
+            $table->string('hang_khach_hang', 30)->default('thuong');
             $table->string('trang_thai', 30)->default('hoat_dong');
+            $table->string('anh_dai_dien')->nullable();
+            $table->text('ghi_chu')->nullable();
             $table->timestamps();
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('loai_phong');
+        Schema::dropIfExists('khach_hang');
     }
 };
