@@ -10,14 +10,16 @@ class NguoiDungSeeder extends Seeder
 {
     public function run(): void
     {
-        NguoiDung::create([
-            'ho_ten' => 'Quản trị hệ thống',
-            'ten_dang_nhap' => 'admin',
-            'email' => 'admin@gmail.com',
-            'password' => Hash::make('123456'),
-            'so_dien_thoai' => '0900000000',
-            'vai_tro' => 'admin',
-            'trang_thai' => 'hoat_dong',
-        ]);
+        NguoiDung::query()->updateOrCreate(
+            ['ten_dang_nhap' => 'admin'],
+            [
+                'ho_ten' => 'Quan tri he thong',
+                'email' => 'admin@gmail.com',
+                'password' => Hash::make('123456'),
+                'so_dien_thoai' => '0900000000',
+                'vai_tro' => 'admin',
+                'trang_thai' => 'hoat_dong',
+            ]
+        );
     }
 }
