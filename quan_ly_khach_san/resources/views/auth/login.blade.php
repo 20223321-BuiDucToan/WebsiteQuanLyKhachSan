@@ -1,21 +1,36 @@
-@extends('layouts.auth')
+﻿@extends('layouts.auth')
+
+@section('title', 'Đăng nhập hệ thống')
 
 @section('content')
 <div>
-    <div class="auth-card-title">Đăng nhập</div>
-    <div class="auth-card-subtitle">Đăng nhập để truy cập hệ thống quản lý khách sạn.</div>
+    <h1 class="auth-card-title">Đăng nhập</h1>
+    <p class="auth-card-subtitle">Đăng nhập để đặt phòng trực tuyến hoặc truy cập khu vực quản lý.</p>
 
     <form action="{{ route('login.submit') }}" method="POST">
         @csrf
 
         <div class="mb-3">
             <label class="form-label">Email hoặc tên đăng nhập</label>
-            <input type="text" name="login" class="form-control" value="{{ old('login') }}" placeholder="Nhập email hoặc tên đăng nhập">
+            <input
+                type="text"
+                name="login"
+                class="form-control"
+                value="{{ old('login') }}"
+                placeholder="Nhập email hoặc tên đăng nhập"
+                required
+            >
         </div>
 
         <div class="mb-3">
             <label class="form-label">Mật khẩu</label>
-            <input type="password" name="password" class="form-control" placeholder="Nhập mật khẩu">
+            <input
+                type="password"
+                name="password"
+                class="form-control"
+                placeholder="Nhập mật khẩu"
+                required
+            >
         </div>
 
         <div class="d-flex justify-content-between align-items-center mb-4">
@@ -24,7 +39,7 @@
                 <label class="form-check-label" for="remember">Ghi nhớ đăng nhập</label>
             </div>
 
-</r   span class="auth-link text-muted">Quên mật khẩu? (sẽ hoàn thiện sau)</span>
+            <a href="{{ route('password.request') }}" class="auth-link">Quên mật khẩu?</a>
         </div>
 
         <button type="submit" class="btn btn-auth w-100 mb-3">

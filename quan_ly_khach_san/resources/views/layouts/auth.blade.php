@@ -1,132 +1,194 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hotel Luxury Admin</title>
+    <title>@yield('title', 'Tài khoản khách sạn')</title>
 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
+        :root {
+            --ink-900: #0f1f33;
+            --ink-600: #52657f;
+            --line: #d8e3ef;
+            --brand: #0f766e;
+            --brand-dark: #0a5f58;
+        }
+
         * {
-            font-family: 'Poppins', sans-serif;
+            font-family: 'Be Vietnam Pro', sans-serif;
+            box-sizing: border-box;
         }
 
         body {
             min-height: 100vh;
+            margin: 0;
             background:
-                linear-gradient(135deg, rgba(15,23,42,0.88), rgba(30,41,59,0.82)),
-                url('https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1600&q=80');
-            background-size: cover;
-            background-position: center;
+                linear-gradient(125deg, rgba(8, 34, 59, 0.88), rgba(12, 58, 97, 0.82)),
+                url('https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=2100&q=80') center/cover no-repeat;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 30px;
+            padding: 20px;
         }
 
-        .auth-wrapper {
-            width: 100%;
-            max-width: 1100px;
-            min-height: 650px;
-            border-radius: 24px;
+        .auth-shell {
+            width: min(1120px, 100%);
+            min-height: 690px;
+            border-radius: 28px;
             overflow: hidden;
-            background: rgba(255,255,255,0.08);
-            backdrop-filter: blur(10px);
-            box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            backdrop-filter: blur(8px);
+            box-shadow: 0 30px 70px rgba(6, 19, 35, 0.42);
         }
 
-        .auth-left {
-            background: linear-gradient(160deg, rgba(37,99,235,0.85), rgba(124,58,237,0.75));
-            color: white;
-            padding: 60px 50px;
+        .auth-aside {
             height: 100%;
+            padding: 44px;
+            background: linear-gradient(145deg, rgba(15, 118, 110, 0.92), rgba(8, 92, 81, 0.86));
+            color: #fff;
+            position: relative;
+            overflow: hidden;
         }
 
-        .auth-left .brand {
-            font-size: 28px;
-            font-weight: 700;
-            margin-bottom: 50px;
-            letter-spacing: 1px;
+        .auth-aside::before,
+        .auth-aside::after {
+            content: '';
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.15);
         }
 
-        .auth-left h2 {
-            font-size: 38px;
-            font-weight: 700;
-            line-height: 1.3;
-            margin-bottom: 20px;
+        .auth-aside::before {
+            width: 230px;
+            height: 230px;
+            top: -70px;
+            right: -80px;
         }
 
-        .auth-left p {
-            font-size: 15px;
-            opacity: 0.92;
-            line-height: 1.8;
+        .auth-aside::after {
+            width: 290px;
+            height: 290px;
+            bottom: -150px;
+            left: -130px;
         }
 
-        .auth-feature {
-            margin-top: 30px;
+        .aside-brand {
+            font-size: 1.3rem;
+            font-weight: 800;
+            margin-bottom: 40px;
+            position: relative;
+            z-index: 1;
         }
 
-        .auth-feature div {
-            margin-bottom: 16px;
-            font-size: 15px;
+        .aside-title {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(1.8rem, 3vw, 2.45rem);
+            line-height: 1.35;
+            margin-bottom: 14px;
+            position: relative;
+            z-index: 1;
         }
 
-        .auth-right {
-            background: rgba(255,255,255,0.96);
-            padding: 50px 40px;
+        .aside-text {
+            color: #e8f6f2;
+            line-height: 1.75;
+            position: relative;
+            z-index: 1;
+        }
+
+        .aside-points {
+            margin-top: 22px;
+            display: grid;
+            gap: 9px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .aside-points span {
+            font-size: 0.95rem;
+        }
+
+        .auth-main {
             height: 100%;
+            background: rgba(255, 255, 255, 0.96);
+            padding: 32px 30px;
+        }
+
+        .auth-top {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 18px;
+        }
+
+        .btn-home {
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            background: #fff;
+            color: var(--ink-900);
+            padding: 8px 12px;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .btn-home:hover {
+            background: #f7fbff;
+            border-color: #c3d4e7;
         }
 
         .auth-card-title {
-            font-size: 30px;
-            font-weight: 700;
-            color: #0f172a;
-            margin-bottom: 8px;
+            margin: 0 0 6px;
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem;
+            color: var(--ink-900);
         }
 
         .auth-card-subtitle {
-            color: #64748b;
-            margin-bottom: 30px;
+            margin-bottom: 22px;
+            color: var(--ink-600);
         }
 
         .form-label {
             font-weight: 600;
-            color: #334155;
+            color: #26415c;
+            margin-bottom: 6px;
         }
 
         .form-control {
-            height: 48px;
+            min-height: 46px;
             border-radius: 12px;
-            border: 1px solid #dbe3ee;
-            padding-left: 14px;
+            border-color: #ccd9e8;
         }
 
         .form-control:focus {
-            border-color: #4f46e5;
-            box-shadow: 0 0 0 0.2rem rgba(79,70,229,0.12);
+            border-color: #67b4ab;
+            box-shadow: 0 0 0 0.2rem rgba(15, 118, 110, 0.15);
         }
 
         .btn-auth {
-            height: 48px;
-            border-radius: 12px;
-            font-weight: 600;
-            background: linear-gradient(90deg, #2563eb, #7c3aed);
             border: none;
-            color: white;
+            border-radius: 12px;
+            padding: 11px 14px;
+            font-weight: 700;
+            color: #fff;
+            background: linear-gradient(135deg, var(--brand), #0d9488);
         }
 
         .btn-auth:hover {
-            opacity: 0.95;
-            color: white;
+            color: #fff;
+            background: linear-gradient(135deg, var(--brand-dark), #0f766e);
         }
 
         .auth-link {
-            color: #4f46e5;
+            color: #0f766e;
+            font-weight: 600;
             text-decoration: none;
-            font-weight: 500;
         }
 
         .auth-link:hover {
@@ -138,52 +200,51 @@
         }
 
         @media (max-width: 991px) {
-            .auth-left {
-                display: none;
+            .auth-shell {
+                min-height: auto;
             }
 
-            .auth-wrapper {
-                max-width: 520px;
-            }
-
-            .auth-right {
-                padding: 35px 24px;
+            .auth-main {
+                padding: 24px 18px;
             }
         }
     </style>
+
+    @stack('styles')
 </head>
 <body>
     <div class="container-fluid">
         <div class="row justify-content-center">
-            <div class="col-xl-10 col-lg-11">
-                <div class="auth-wrapper">
+            <div class="col-xxl-10 col-xl-11">
+                <div class="auth-shell">
                     <div class="row g-0 h-100">
-                        <div class="col-lg-6">
-                            <div class="auth-left">
-                                <div class="brand">
-                                    <i class="fa-solid fa-hotel me-2"></i> HOTEL LUXURY
+                        <div class="col-lg-6 d-none d-lg-block">
+                            <div class="auth-aside">
+                                <div class="aside-brand">
+                                    <i class="fa-solid fa-hotel me-2"></i>Azure Bay Hotel
                                 </div>
-
-                                <h2>Hệ thống quản lý khách sạn hiện đại và chuyên nghiệp</h2>
-                                <p>
-                                    Quản lý đặt phòng, khách hàng, doanh thu, dịch vụ và vận hành khách sạn
-                                    trên một nền tảng trực quan, mạnh mẽ và đẳng cấp.
-                                </p>
-
-                                <div class="auth-feature">
-                                    <div><i class="fa-solid fa-circle-check me-2"></i> Quản lý người dùng và phân quyền</div>
-                                    <div><i class="fa-solid fa-circle-check me-2"></i> Theo dõi phòng, đặt phòng, hóa đơn</div>
-                                    <div><i class="fa-solid fa-circle-check me-2"></i> Dashboard chuyên nghiệp, dễ mở rộng</div>
+                                <div class="aside-title">Trải nghiệm lưu trú đẳng cấp từ bước đăng nhập đầu tiên</div>
+                                <div class="aside-text">
+                                    Hệ thống hỗ trợ đầy đủ quy trình đặt phòng, chăm sóc khách hàng, thanh toán và theo dõi hóa đơn trên một giao diện trực quan.
+                                </div>
+                                <div class="aside-points">
+                                    <span><i class="fa-solid fa-circle-check me-2"></i>Đặt phòng nhanh và theo dõi trạng thái tức thì</span>
+                                    <span><i class="fa-solid fa-circle-check me-2"></i>Quản lý thông tin tài khoản an toàn</span>
+                                    <span><i class="fa-solid fa-circle-check me-2"></i>Tối ưu vận hành cho admin và nhân viên</span>
                                 </div>
                             </div>
                         </div>
 
                         <div class="col-lg-6">
-                            <div class="auth-right">
+                            <div class="auth-main">
+                                <div class="auth-top">
+                                    <a href="{{ route('booking.index') }}" class="btn-home">
+                                        <i class="fa-solid fa-house me-1"></i>Về trang chủ
+                                    </a>
+                                </div>
+
                                 @if(session('success'))
-                                    <div class="alert alert-success">
-                                        {{ session('success') }}
-                                    </div>
+                                    <div class="alert alert-success">{{ session('success') }}</div>
                                 @endif
 
                                 @if($errors->any())
@@ -204,5 +265,7 @@
             </div>
         </div>
     </div>
+
+    @stack('scripts')
 </body>
 </html>

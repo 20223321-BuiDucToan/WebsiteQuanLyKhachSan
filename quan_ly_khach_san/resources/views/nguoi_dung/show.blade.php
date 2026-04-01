@@ -1,14 +1,14 @@
-@extends('layouts.admin')
+﻿@extends('layouts.admin')
 
 @section('title', 'Chi tiết người dùng')
 
 @section('content')
     <div class="mb-4">
-        <h2 class="section-title mb-1">Chi tiết người dùng</h2>
-        <p class="section-subtitle">Thông tin đầy đủ của tài khoản nội bộ</p>
+        <h2 class="section-title">Chi tiết người dùng</h2>
+        <p class="section-subtitle">Thông tin đầy đủ của tài khoản nội bộ.</p>
     </div>
 
-    <div class="card premium-card">
+    <div class="premium-card">
         <div class="card-body p-4">
             <div class="row g-4">
                 <div class="col-md-6">
@@ -48,25 +48,21 @@
 
                 <div class="col-md-6">
                     <label class="text-muted small">Lần đăng nhập cuối</label>
-                    <div class="fw-bold">
-                        {{ $nguoiDung->lan_dang_nhap_cuoi ? $nguoiDung->lan_dang_nhap_cuoi->format('d/m/Y H:i') : 'Chưa có' }}
-                    </div>
+                    <div class="fw-bold">{{ $nguoiDung->lan_dang_nhap_cuoi ? $nguoiDung->lan_dang_nhap_cuoi->format('d/m/Y H:i') : 'Chưa có' }}</div>
                 </div>
 
                 <div class="col-md-6">
                     <label class="text-muted small">Ngày tạo</label>
-                    <div class="fw-bold">{{ $nguoiDung->created_at ? $nguoiDung->created_at->format('d/m/Y H:i') : '' }}</div>
+                    <div class="fw-bold">{{ $nguoiDung->created_at ? $nguoiDung->created_at->format('d/m/Y H:i') : '-' }}</div>
                 </div>
             </div>
 
             <div class="mt-4 d-flex gap-2">
-                <a href="{{ route('nguoi-dung.edit', $nguoiDung->id) }}" class="btn btn-warning text-white rounded-4 px-4">
+                <a href="{{ route('nguoi-dung.edit', $nguoiDung->id) }}" class="btn btn-warning text-white">
                     <i class="fa-solid fa-pen me-2"></i>Sửa
                 </a>
 
-                <a href="{{ route('nguoi-dung.index') }}" class="btn btn-light border rounded-4 px-4">
-                    Quay lại
-                </a>
+                <a href="{{ route('nguoi-dung.index') }}" class="btn btn-soft">Quay lại</a>
             </div>
         </div>
     </div>

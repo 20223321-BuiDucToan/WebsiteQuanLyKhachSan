@@ -50,7 +50,7 @@ class NguoiDungController extends Controller
             'password' => ['required', 'string', 'min:6', 'confirmed'],
             'so_dien_thoai' => ['required', 'string', 'max:20'],
             'dia_chi' => ['nullable', 'string', 'max:255'],
-            'vai_tro' => ['required', Rule::in(['admin', 'nhan_vien'])],
+            'vai_tro' => ['required', Rule::in(['admin', 'nhan_vien', 'khach_hang'])],
             'trang_thai' => ['required', Rule::in(['hoat_dong', 'tam_khoa'])],
         ]);
 
@@ -103,7 +103,7 @@ class NguoiDungController extends Controller
             'password' => ['nullable', 'string', 'min:6', 'confirmed'],
             'so_dien_thoai' => ['required', 'string', 'max:20'],
             'dia_chi' => ['nullable', 'string', 'max:255'],
-            'vai_tro' => ['required', Rule::in(['admin', 'nhan_vien'])],
+            'vai_tro' => ['required', Rule::in(['admin', 'nhan_vien', 'khach_hang'])],
             'trang_thai' => ['required', Rule::in(['hoat_dong', 'tam_khoa'])],
         ]);
 

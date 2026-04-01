@@ -1,96 +1,176 @@
-@extends('layouts.admin')
+﻿@extends('layouts.admin')
 
-@section('title', 'Dashboard Admin')
+@section('title', 'Bảng điều khiển quản trị')
 
 @section('content')
     <div class="mb-4">
-        <h2 class="section-title mb-1">Dashboard quản trị</h2>
-        <p class="section-subtitle">Tổng quan vận hành và quản trị hệ thống khách sạn</p>
+        <h2 class="section-title">Bảng điều khiển quản trị</h2>
+        <p class="section-subtitle">Toàn bộ số liệu vận hành được đồng bộ từ đặt phòng online và dữ liệu nội bộ.</p>
     </div>
 
     <div class="row g-4 mb-4">
         <div class="col-md-6 col-xl-3">
-            <div class="card premium-card p-4">
-                <h6 class="text-muted">Tổng người dùng</h6>
-                <h2 class="fw-bold">{{ $tongNguoiDung }}</h2>
+            <div class="metric-card">
+                <div class="metric-label">Tổng người dùng</div>
+                <div class="metric-value">{{ $tongNguoiDung }}</div>
             </div>
         </div>
-
         <div class="col-md-6 col-xl-3">
-            <div class="card premium-card p-4">
-                <h6 class="text-muted">Tổng admin</h6>
-                <h2 class="fw-bold">{{ $tongAdmin }}</h2>
+            <div class="metric-card">
+                <div class="metric-label">Tài khoản quản trị</div>
+                <div class="metric-value">{{ $tongAdmin }}</div>
             </div>
         </div>
-
         <div class="col-md-6 col-xl-3">
-            <div class="card premium-card p-4">
-                <h6 class="text-muted">Tổng nhân viên</h6>
-                <h2 class="fw-bold">{{ $tongNhanVien }}</h2>
+            <div class="metric-card">
+                <div class="metric-label">Tài khoản nhân viên</div>
+                <div class="metric-value">{{ $tongNhanVien }}</div>
             </div>
         </div>
-
         <div class="col-md-6 col-xl-3">
-            <div class="card premium-card p-4">
-                <h6 class="text-muted">Tài khoản hoạt động</h6>
-                <h2 class="fw-bold">{{ $tongTaiKhoanHoatDong }}</h2>
+            <div class="metric-card">
+                <div class="metric-label">Tài khoản hoạt động</div>
+                <div class="metric-value text-success">{{ $tongTaiKhoanHoatDong }}</div>
             </div>
         </div>
     </div>
 
-    <div class="row g-4">
-        <div class="col-lg-8">
-            <div class="card premium-card">
+    <div class="row g-4 mb-4">
+        <div class="col-md-4">
+            <div class="metric-card">
+                <div class="metric-label">Tổng đơn đặt phòng</div>
+                <div class="metric-value">{{ $tongDatPhong }}</div>
+                <div class="small text-muted mt-2">Đơn từ website: {{ $tongDatPhongOnline }}</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="metric-card">
+                <div class="metric-label">Đơn chờ xác nhận</div>
+                <div class="metric-value text-warning">{{ $tongDatPhongChoXacNhan }}</div>
+                <div class="small text-muted mt-2">Cần xử lý nhanh để tăng tỷ lệ chuyển đổi.</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="metric-card">
+                <div class="metric-label">Doanh thu tháng này</div>
+                <div class="metric-value text-success">{{ number_format((float) $doanhThuThangNay, 0, ',', '.') }}</div>
+                <div class="small text-muted mt-2">VNĐ</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-lg-7">
+            <div class="premium-card h-100">
                 <div class="card-body p-4">
-                    <h5 class="fw-bold mb-3">Khu vực quản trị</h5>
-                    <p class="text-muted mb-4">Quản trị viên có quyền theo dõi toàn hệ thống, quản lý tài khoản nội bộ và kiểm soát dữ liệu vận hành.</p>
+                    <h5 class="fw-bold mb-3">Điều hướng nhanh theo nghiệp vụ</h5>
+                    <p class="text-muted mb-4">Mở nhanh các chức năng chính để xử lý vận hành hàng ngày.</p>
 
                     <div class="row g-3">
-                        <div class="col-md-6">
-                            <a href="{{ route('nguoi-dung.index') }}" class="text-decoration-none">
-                                <div class="border rounded-4 p-4 h-100">
-                                    <div class="fw-bold mb-2">
-                                        <i class="fa-solid fa-users me-2 text-primary"></i>Quản lý người dùng
-                                    </div>
-                                    <div class="text-muted small">Xem danh sách, tạo mới, cập nhật, khóa tài khoản nội bộ.</div>
-                                </div>
+                        <div class="col-md-6 col-xl-4">
+                            <a href="{{ route('dat-phong.index') }}" class="d-block border rounded-4 p-3 h-100">
+                                <div class="fw-bold mb-1"><i class="fa-solid fa-calendar-check me-2 text-primary"></i>Quản lý đặt phòng</div>
+                                <div class="small text-muted">Duyệt đơn mới, cập nhật trạng thái lưu trú.</div>
                             </a>
                         </div>
-
-                        <div class="col-md-6">
-                            <div class="border rounded-4 p-4 h-100">
-                                <div class="fw-bold mb-2">
-                                    <i class="fa-solid fa-chart-column me-2 text-success"></i>Báo cáo hệ thống
-                                </div>
-                                <div class="text-muted small">Theo dõi thống kê quản trị và dữ liệu vận hành tổng quát.</div>
-                            </div>
+                        <div class="col-md-6 col-xl-4">
+                            <a href="{{ route('phong.index') }}" class="d-block border rounded-4 p-3 h-100">
+                                <div class="fw-bold mb-1"><i class="fa-solid fa-bed me-2 text-info"></i>Quản lý phòng</div>
+                                <div class="small text-muted">Theo dõi tồn kho phòng và giá phòng mặc định.</div>
+                            </a>
+                        </div>
+                        <div class="col-md-6 col-xl-4">
+                            <a href="{{ route('khach-hang.index') }}" class="d-block border rounded-4 p-3 h-100">
+                                <div class="fw-bold mb-1"><i class="fa-solid fa-users me-2 text-secondary"></i>Quản lý khách hàng</div>
+                                <div class="small text-muted">Xem hồ sơ, lịch sử và hạng khách hàng.</div>
+                            </a>
+                        </div>
+                        <div class="col-md-6 col-xl-4">
+                            <a href="{{ route('hoa-don.index') }}" class="d-block border rounded-4 p-3 h-100">
+                                <div class="fw-bold mb-1"><i class="fa-solid fa-file-invoice-dollar me-2 text-danger"></i>Quản lý hóa đơn</div>
+                                <div class="small text-muted">Kiểm soát công nợ và trạng thái thanh toán.</div>
+                            </a>
+                        </div>
+                        <div class="col-md-6 col-xl-4">
+                            <a href="{{ route('thanh-toan.index') }}" class="d-block border rounded-4 p-3 h-100">
+                                <div class="fw-bold mb-1"><i class="fa-solid fa-credit-card me-2 text-success"></i>Quản lý thanh toán</div>
+                                <div class="small text-muted">Ghi nhận giao dịch và đối soát hóa đơn.</div>
+                            </a>
+                        </div>
+                        <div class="col-md-6 col-xl-4">
+                            <a href="{{ route('bao-cao.index') }}" class="d-block border rounded-4 p-3 h-100">
+                                <div class="fw-bold mb-1"><i class="fa-solid fa-chart-line me-2 text-warning"></i>Báo cáo thống kê</div>
+                                <div class="small text-muted">Theo dõi KPI doanh thu và công suất phòng.</div>
+                            </a>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="col-lg-4">
-            <div class="card premium-card h-100">
+        <div class="col-lg-5">
+            <div class="premium-card h-100">
                 <div class="card-body p-4">
-                    <h5 class="fw-bold mb-3">Người dùng mới</h5>
+                    <h5 class="fw-bold mb-3">Đơn đặt phòng gần đây</h5>
 
-                    @forelse($nguoiDungMoi as $item)
-                        <div class="border-bottom pb-3 mb-3">
-                            <div class="fw-bold">{{ $item->ho_ten }}</div>
-                            <div class="text-muted small">{{ $item->email }}</div>
-                            <div class="small mt-2">
-                                @if($item->vai_tro === 'admin')
-                                    <span class="badge-role-admin">Admin</span>
-                                @else
-                                    <span class="badge-role-nhan-vien">Nhân viên</span>
+                    @forelse($datPhongGanDay as $datPhong)
+                        @php
+                            $phong = $datPhong->chiTietDatPhong->first()?->phong;
+                            $mapTrangThai = [
+                                'cho_xac_nhan' => 'chip chip-warning',
+                                'da_xac_nhan' => 'chip chip-info',
+                                'da_nhan_phong' => 'chip chip-neutral',
+                                'da_tra_phong' => 'chip chip-success',
+                                'da_huy' => 'chip chip-danger',
+                            ];
+                            $chip = $mapTrangThai[$datPhong->trang_thai] ?? 'chip chip-neutral';
+                        @endphp
+
+                        <div class="border rounded-4 p-3 mb-2">
+                            <div class="d-flex justify-content-between align-items-center gap-2">
+                                <strong>{{ $datPhong->ma_dat_phong }}</strong>
+                                <span class="{{ $chip }}">{{ \App\Support\HienThiGiaTri::nhanGiaTri($datPhong->trang_thai) }}</span>
+                            </div>
+                            <div class="small text-muted mt-1">
+                                {{ $datPhong->khachHang?->ho_ten ?? 'Khách lẻ' }}
+                                @if($phong)
+                                    | Phòng {{ $phong->so_phong }}
                                 @endif
+                            </div>
+                            <div class="small text-muted">
+                                {{ optional($datPhong->ngay_nhan_phong_du_kien)->format('d/m/Y') }}
+                                -
+                                {{ optional($datPhong->ngay_tra_phong_du_kien)->format('d/m/Y') }}
                             </div>
                         </div>
                     @empty
-                        <div class="text-muted">Chưa có dữ liệu người dùng mới.</div>
+                        <div class="text-muted">Chưa có đơn đặt phòng gần đây.</div>
                     @endforelse
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="premium-card">
+        <div class="card-body p-4">
+            <h5 class="fw-bold mb-3">Người dùng mới tạo gần đây</h5>
+
+            <div class="row g-3">
+                @forelse($nguoiDungMoi as $item)
+                    <div class="col-md-6 col-xl-4">
+                        <div class="border rounded-4 p-3 h-100">
+                            <div class="fw-bold">{{ $item->ho_ten }}</div>
+                            <div class="text-muted small mb-2">{{ $item->email }}</div>
+                            @if($item->vai_tro === 'admin')
+                                <span class="badge-role-admin">Admin</span>
+                            @else
+                                <span class="badge-role-nhan-vien">Nhân viên</span>
+                            @endif
+                        </div>
+                    </div>
+                @empty
+                    <div class="col-12 text-muted">Chưa có dữ liệu người dùng mới.</div>
+                @endforelse
             </div>
         </div>
     </div>
