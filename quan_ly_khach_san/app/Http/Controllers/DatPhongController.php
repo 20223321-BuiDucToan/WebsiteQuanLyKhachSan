@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ChiTietDatPhong;
 use App\Models\DatPhong;
+use App\Models\HoaDon;
 use App\Models\KhachHang;
 use App\Models\Phong;
 use Carbon\Carbon;
@@ -116,7 +117,7 @@ class DatPhongController extends Controller
 
         if ($phong->tinh_trang_hoat_dong !== 'hoat_dong' || !$phong->loaiPhong || $phong->loaiPhong->trang_thai !== 'hoat_dong') {
             throw ValidationException::withMessages([
-                'phong_id' => 'Phong nay hien khong san sang de dat.',
+                'phong_id' => 'Phòng này hiện không sẵn sàng để đặt.',
             ]);
         }
 
@@ -125,7 +126,7 @@ class DatPhongController extends Controller
 
         if ($tongKhach > $soNguoiToiDa) {
             throw ValidationException::withMessages([
-                'so_nguoi_lon' => 'Tong so khach vuot qua suc chua toi da cua phong (' . $soNguoiToiDa . ').',
+                'so_nguoi_lon' => 'Tổng số khách vượt quá sức chứa tối đa của phòng (' . $soNguoiToiDa . ').',
             ]);
         }
 
@@ -137,7 +138,7 @@ class DatPhongController extends Controller
         $datPhong = DB::transaction(function () use ($duLieu, $phong, $giaMotDem, $ngayNhan, $ngayTra, $soDem) {
             if (!$this->phongConTrong($phong->id, $ngayNhan->toDateString(), $ngayTra->toDateString())) {
                 throw ValidationException::withMessages([
-                    'phong_id' => 'Phong da duoc dat trong khoang thoi gian nay. Vui long chon phong khac.',
+                    'phong_id' => 'Phòng đã được đặt trong khoảng thời gian này. Vui lòng chọn phòng khác.',
                 ]);
             }
 
@@ -177,7 +178,7 @@ class DatPhongController extends Controller
 
         return redirect()
             ->route('dat-phong.show', $datPhong)
-            ->with('success', 'Tao don dat phong thanh cong.');
+            ->with('success', 'Tạo đơn đặt phòng thành công.');
     }
 
     public function show(DatPhong $datPhong)
@@ -186,15 +187,22 @@ class DatPhongController extends Controller
             'khachHang',
             'nguoiTao',
             'chiTietDatPhong.phong.loaiPhong',
+            'hoaDon',
         ]);
 
         $tongTienPhong = $datPhong->chiTietDatPhong->sum(function (ChiTietDatPhong $chiTiet) {
             return (float) $chiTiet->gia_phong * (int) $chiTiet->so_dem;
         });
 
+        $hoaDonHienTai = $datPhong->hoaDon
+            ->where('trang_thai', '!=', 'da_huy')
+            ->sortByDesc('id')
+            ->first();
+
         return view('dat_phong.show', [
             'datPhong' => $datPhong,
             'tongTienPhong' => $tongTienPhong,
+            'hoaDonHienTai' => $hoaDonHienTai,
         ]);
     }
 
@@ -207,7 +215,9 @@ class DatPhongController extends Controller
             ],
         ]);
 
-        DB::transaction(function () use ($datPhong, $duLieu) {
+        $daTaoHoaDonTuDong = false;
+
+        DB::transaction(function () use ($datPhong, $duLieu, &$daTaoHoaDonTuDong) {
             $trangThaiMoi = $duLieu['trang_thai'];
             $duLieuCapNhatDatPhong = [
                 'trang_thai' => $trangThaiMoi,
@@ -241,14 +251,22 @@ class DatPhongController extends Controller
                 $datPhong->chiTietDatPhong()->update($duLieuCapNhatChiTiet);
             }
 
-            $this->dongBoTrangThaiPhongTheoDatPhong(
-                $datPhong->fresh(['chiTietDatPhong.phong'])
-            );
+            $datPhongSauCapNhat = $datPhong->fresh(['chiTietDatPhong.phong', 'chiTietDatPhong', 'hoaDon']);
+
+            $this->dongBoTrangThaiPhongTheoDatPhong($datPhongSauCapNhat);
+
+            if ($trangThaiMoi === 'da_tra_phong') {
+                $daTaoHoaDonTuDong = $this->taoHoaDonTuDongNeuCan($datPhongSauCapNhat);
+            }
         });
+
+        $thongBao = $daTaoHoaDonTuDong
+            ? 'Cập nhật trạng thái đơn đặt phòng thành công. Hệ thống đã tự động tạo hóa đơn.'
+            : 'Cập nhật trạng thái đơn đặt phòng thành công.';
 
         return redirect()
             ->back()
-            ->with('success', 'Cap nhat trang thai don dat phong thanh cong.');
+            ->with('success', $thongBao);
     }
 
     private function mapTrangThaiChiTiet(string $trangThaiDatPhong): ?string
@@ -291,23 +309,7 @@ class DatPhongController extends Controller
     {
         $soDienThoai = $duLieu['so_dien_thoai'] ?? null;
         $email = $duLieu['email'] ?? null;
-
-        $khachHang = null;
-
-        if ($soDienThoai || $email) {
-            $khachHang = KhachHang::query()
-                ->where(function ($query) use ($soDienThoai, $email) {
-                    if ($soDienThoai) {
-                        $query->where('so_dien_thoai', $soDienThoai);
-                    }
-
-                    if ($email) {
-                        $phuongThuc = $soDienThoai ? 'orWhere' : 'where';
-                        $query->{$phuongThuc}('email', $email);
-                    }
-                })
-                ->first();
-        }
+        $khachHang = KhachHang::timTheoThongTinLienHe($email, $soDienThoai);
 
         if ($khachHang) {
             $khachHang->fill([
@@ -322,7 +324,7 @@ class DatPhongController extends Controller
         }
 
         return KhachHang::query()->create([
-            'ma_khach_hang' => $this->taoMaKhachHang(),
+            'ma_khach_hang' => KhachHang::taoMaMoi(),
             'ho_ten' => $duLieu['ho_ten'],
             'so_dien_thoai' => $soDienThoai,
             'email' => $email,
@@ -371,12 +373,46 @@ class DatPhongController extends Controller
         return $maDatPhong;
     }
 
-    private function taoMaKhachHang(): string
+    private function taoHoaDonTuDongNeuCan(DatPhong $datPhong): bool
+    {
+        $daCoHoaDon = $datPhong->hoaDon
+            ->where('trang_thai', '!=', 'da_huy')
+            ->isNotEmpty();
+
+        if ($daCoHoaDon) {
+            return false;
+        }
+
+        $tongTienPhong = (float) $datPhong->chiTietDatPhong->sum(function (ChiTietDatPhong $chiTiet) {
+            return (float) $chiTiet->gia_phong * (int) $chiTiet->so_dem;
+        });
+
+        $tongTien = max(0, $tongTienPhong);
+        $trangThaiHoaDon = $tongTien > 0 ? 'chua_thanh_toan' : 'da_thanh_toan';
+
+        HoaDon::query()->create([
+            'ma_hoa_don' => $this->taoMaHoaDon(),
+            'dat_phong_id' => $datPhong->id,
+            'tong_tien_phong' => $tongTienPhong,
+            'tong_tien_dich_vu' => 0,
+            'giam_gia' => 0,
+            'thue' => 0,
+            'tong_tien' => $tongTien,
+            'trang_thai' => $trangThaiHoaDon,
+            'thoi_diem_xuat' => now(),
+            'nguoi_tao_id' => auth()->id(),
+            'ghi_chu' => 'Hóa đơn được tạo tự động khi đơn đặt phòng chuyển sang trạng thái đã trả phòng.',
+        ]);
+
+        return true;
+    }
+
+    private function taoMaHoaDon(): string
     {
         do {
-            $maKhachHang = 'KH' . now()->format('ymdHis') . random_int(10, 99);
-        } while (KhachHang::query()->where('ma_khach_hang', $maKhachHang)->exists());
+            $maHoaDon = 'HD' . now()->format('ymdHis') . random_int(10, 99);
+        } while (HoaDon::query()->where('ma_hoa_don', $maHoaDon)->exists());
 
-        return $maKhachHang;
+        return $maHoaDon;
     }
 }
