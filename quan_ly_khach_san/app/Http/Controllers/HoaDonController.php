@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\DatPhong;
 use App\Models\HoaDon;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -32,47 +34,32 @@ class HoaDonController extends Controller
         $tuNgay = $request->input('tu_ngay');
         $denNgay = $request->input('den_ngay');
 
-        $danhSachHoaDon = HoaDon::query()
-            ->with(['datPhong.khachHang', 'datPhong.chiTietDatPhong.phong', 'thanhToan'])
-            ->when($tuKhoa, function ($query) use ($tuKhoa) {
-                $query->where(function ($innerQuery) use ($tuKhoa) {
-                    $innerQuery
-                        ->where('ma_hoa_don', 'like', "%{$tuKhoa}%")
-                        ->orWhereHas('datPhong', function ($datPhongQuery) use ($tuKhoa) {
-                            $datPhongQuery
-                                ->where('ma_dat_phong', 'like', "%{$tuKhoa}%")
-                                ->orWhereHas('khachHang', function ($khachHangQuery) use ($tuKhoa) {
-                                    $khachHangQuery
-                                        ->where('ho_ten', 'like', "%{$tuKhoa}%")
-                                        ->orWhere('so_dien_thoai', 'like', "%{$tuKhoa}%")
-                                        ->orWhere('email', 'like', "%{$tuKhoa}%");
-                                });
-                        });
-                });
-            })
-            ->when($trangThai, function ($query) use ($trangThai) {
-                $query->where('trang_thai', $trangThai);
-            })
-            ->when($tuNgay, function ($query) use ($tuNgay) {
-                $query->whereDate('thoi_diem_xuat', '>=', $tuNgay);
-            })
-            ->when($denNgay, function ($query) use ($denNgay) {
-                $query->whereDate('thoi_diem_xuat', '<=', $denNgay);
-            })
+        $truyVanHoaDon = $this->taoTruyVanHoaDon($tuKhoa, $trangThai, $tuNgay, $denNgay);
+
+        $danhSachHoaDon = (clone $truyVanHoaDon)
             ->latest('id')
             ->paginate(12)
             ->withQueryString();
 
-        foreach ($danhSachHoaDon as $hoaDon) {
-            $this->dongBoTrangThaiTheoThanhToan($hoaDon);
-        }
+        $danhSachHoaDon->setCollection(
+            $danhSachHoaDon->getCollection()->map(function (HoaDon $hoaDon) {
+                $this->dongBoTrangThaiTheoThanhToan($hoaDon);
 
-        $thongKe = [
-            'tong' => HoaDon::query()->count(),
-            'chua_thanh_toan' => HoaDon::query()->where('trang_thai', 'chua_thanh_toan')->count(),
-            'thanh_toan_mot_phan' => HoaDon::query()->where('trang_thai', 'thanh_toan_mot_phan')->count(),
-            'da_thanh_toan' => HoaDon::query()->where('trang_thai', 'da_thanh_toan')->count(),
-        ];
+                return $this->boSungDuLieuHoaDon($hoaDon);
+            })
+        );
+
+        $danhSachHoaDonDaLoc = (clone $truyVanHoaDon)
+            ->get()
+            ->map(fn(HoaDon $hoaDon) => $this->boSungDuLieuHoaDon($hoaDon));
+
+        $thongKe = $this->tongHopHoaDon($danhSachHoaDonDaLoc);
+
+        $hoaDonCanChuY = $danhSachHoaDonDaLoc
+            ->filter(fn(HoaDon $hoaDon) => $hoaDon->trang_thai_hien_thi !== 'da_huy' && $hoaDon->so_tien_con_lai > 0)
+            ->sortByDesc(fn(HoaDon $hoaDon) => ($hoaDon->can_thu_gap ? 1000000000000 : 0) + $hoaDon->so_tien_con_lai)
+            ->take(5)
+            ->values();
 
         return view('hoa_don.index', compact(
             'danhSachHoaDon',
@@ -80,7 +67,8 @@ class HoaDonController extends Controller
             'trangThai',
             'tuNgay',
             'denNgay',
-            'thongKe'
+            'thongKe',
+            'hoaDonCanChuY'
         ));
     }
 
@@ -133,7 +121,7 @@ class HoaDonController extends Controller
 
             if ($daCoHoaDon) {
                 throw ValidationException::withMessages([
-                    'dat_phong_id' => 'Don dat phong nay da co hoa don.',
+                    'dat_phong_id' => 'Đơn đặt phòng này đã có hóa đơn.',
                 ]);
             }
 
@@ -162,7 +150,7 @@ class HoaDonController extends Controller
 
         return redirect()
             ->route('hoa-don.show', $hoaDon)
-            ->with('success', 'Tao hoa don thanh cong.');
+            ->with('success', 'Tạo hóa đơn thành công.');
     }
 
     public function show(HoaDon $hoaDon)
@@ -198,7 +186,7 @@ class HoaDonController extends Controller
         if ($trangThaiMoi === 'da_thanh_toan' && $soTienDaThanhToan < (float) $hoaDon->tong_tien) {
             return redirect()
                 ->back()
-                ->with('error', 'Khong the chuyen sang da thanh toan khi so tien thu chua du.');
+                ->with('error', 'Không thể chuyển sang đã thanh toán khi số tiền thu chưa đủ.');
         }
 
         $hoaDon->update([
@@ -207,7 +195,110 @@ class HoaDonController extends Controller
 
         return redirect()
             ->back()
-            ->with('success', 'Cap nhat trang thai hoa don thanh cong.');
+            ->with('success', 'Cập nhật trạng thái hóa đơn thành công.');
+    }
+
+    private function taoTruyVanHoaDon(?string $tuKhoa, ?string $trangThai, ?string $tuNgay, ?string $denNgay)
+    {
+        return HoaDon::query()
+            ->with(['datPhong.khachHang', 'datPhong.chiTietDatPhong.phong', 'thanhToan'])
+            ->when($tuKhoa, function ($query) use ($tuKhoa) {
+                $query->where(function ($innerQuery) use ($tuKhoa) {
+                    $innerQuery
+                        ->where('ma_hoa_don', 'like', "%{$tuKhoa}%")
+                        ->orWhereHas('datPhong', function ($datPhongQuery) use ($tuKhoa) {
+                            $datPhongQuery
+                                ->where('ma_dat_phong', 'like', "%{$tuKhoa}%")
+                                ->orWhereHas('khachHang', function ($khachHangQuery) use ($tuKhoa) {
+                                    $khachHangQuery
+                                        ->where('ho_ten', 'like', "%{$tuKhoa}%")
+                                        ->orWhere('so_dien_thoai', 'like', "%{$tuKhoa}%")
+                                        ->orWhere('email', 'like', "%{$tuKhoa}%");
+                                });
+                        });
+                });
+            })
+            ->when($trangThai, function ($query) use ($trangThai) {
+                $query->where('trang_thai', $trangThai);
+            })
+            ->when($tuNgay, function ($query) use ($tuNgay) {
+                $query->whereDate('thoi_diem_xuat', '>=', $tuNgay);
+            })
+            ->when($denNgay, function ($query) use ($denNgay) {
+                $query->whereDate('thoi_diem_xuat', '<=', $denNgay);
+            });
+    }
+
+    private function boSungDuLieuHoaDon(HoaDon $hoaDon): HoaDon
+    {
+        $soTienDaThu = $this->tinhTongTienThanhCong($hoaDon);
+        $tongTien = (float) $hoaDon->tong_tien;
+        $soTienConLai = max(0, $tongTien - $soTienDaThu);
+        $phanTramThanhToan = $tongTien > 0 ? round(min(100, ($soTienDaThu / $tongTien) * 100), 1) : 100;
+        $trangThaiHienThi = $this->xacDinhTrangThaiHienThi($hoaDon, $soTienDaThu);
+
+        $ngayDenHanThu = $hoaDon->datPhong?->ngay_tra_phong_thuc_te
+            ?? $hoaDon->datPhong?->ngay_tra_phong_du_kien
+            ?? $hoaDon->thoi_diem_xuat;
+
+        $ngayDenHanThu = $ngayDenHanThu ? Carbon::parse($ngayDenHanThu) : null;
+
+        $canThuGap = $trangThaiHienThi !== 'da_huy'
+            && $soTienConLai > 0
+            && $ngayDenHanThu
+            && $ngayDenHanThu->copy()->startOfDay()->lt(now()->startOfDay());
+
+        $hoaDon->setAttribute('so_tien_da_thu', $soTienDaThu);
+        $hoaDon->setAttribute('so_tien_con_lai', $soTienConLai);
+        $hoaDon->setAttribute('phan_tram_thanh_toan', $phanTramThanhToan);
+        $hoaDon->setAttribute('trang_thai_hien_thi', $trangThaiHienThi);
+        $hoaDon->setAttribute('ngay_den_han_thu', $ngayDenHanThu);
+        $hoaDon->setAttribute('can_thu_gap', $canThuGap);
+        $hoaDon->setAttribute('tong_so_phong', (int) ($hoaDon->datPhong?->chiTietDatPhong?->count() ?? 0));
+        $hoaDon->setAttribute('tong_so_dem', (int) ($hoaDon->datPhong?->chiTietDatPhong?->sum('so_dem') ?? 0));
+
+        return $hoaDon;
+    }
+
+    private function tongHopHoaDon(Collection $danhSachHoaDon): array
+    {
+        $tongHoaDon = $danhSachHoaDon->count();
+        $tongGiaTri = (float) $danhSachHoaDon->sum('tong_tien');
+        $tongDaThu = (float) $danhSachHoaDon->sum(function (HoaDon $hoaDon) {
+            return min((float) $hoaDon->tong_tien, (float) $hoaDon->so_tien_da_thu);
+        });
+        $tongConLai = (float) $danhSachHoaDon->sum('so_tien_con_lai');
+
+        return [
+            'tong' => $tongHoaDon,
+            'tong_gia_tri' => $tongGiaTri,
+            'da_thu' => $tongDaThu,
+            'con_lai' => $tongConLai,
+            'ty_le_thu_hoi' => $tongGiaTri > 0 ? round(($tongDaThu / $tongGiaTri) * 100, 1) : 0,
+            'gia_tri_trung_binh' => $tongHoaDon > 0 ? round($tongGiaTri / $tongHoaDon, 0) : 0,
+            'chua_thanh_toan' => $danhSachHoaDon->where('trang_thai_hien_thi', 'chua_thanh_toan')->count(),
+            'thanh_toan_mot_phan' => $danhSachHoaDon->where('trang_thai_hien_thi', 'thanh_toan_mot_phan')->count(),
+            'da_thanh_toan' => $danhSachHoaDon->where('trang_thai_hien_thi', 'da_thanh_toan')->count(),
+            'da_huy' => $danhSachHoaDon->where('trang_thai_hien_thi', 'da_huy')->count(),
+            'can_thu_gap' => $danhSachHoaDon->where('can_thu_gap', true)->count(),
+        ];
+    }
+
+    private function xacDinhTrangThaiHienThi(HoaDon $hoaDon, float $soTienDaThanhToan): string
+    {
+        if ($hoaDon->trang_thai === 'da_huy') {
+            return 'da_huy';
+        }
+
+        if ($soTienDaThanhToan >= (float) $hoaDon->tong_tien) {
+            return 'da_thanh_toan';
+        }
+
+        if ($soTienDaThanhToan > 0) {
+            return 'thanh_toan_mot_phan';
+        }
+
+        return 'chua_thanh_toan';
     }
 
     private function tinhTongTienPhongTuDatPhong(DatPhong $datPhong): float
