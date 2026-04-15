@@ -1,60 +1,62 @@
 @extends('layouts.admin')
 
-@section('title', 'Báo cáo thống kê')
+@section('title', 'Quản lý khách hàng')
 
 @push('styles')
     <style>
-        .report-hero {
+        .customer-hero {
             border: none;
             background:
-                radial-gradient(circle at top left, rgba(255, 255, 255, 0.28), transparent 28%),
-                linear-gradient(135deg, #173652, #1d4ed8 52%, #0ea5e9);
+                radial-gradient(circle at top right, rgba(255, 255, 255, 0.24), transparent 34%),
+                linear-gradient(135deg, #173652, #0f766e 60%, #22c55e);
             color: #fff;
         }
 
-        .report-hero .section-title,
-        .report-hero .section-subtitle {
+        .customer-hero .section-title,
+        .customer-hero .section-subtitle {
             color: #fff;
         }
 
-        .report-hero .section-subtitle {
+        .customer-hero .section-subtitle {
+            opacity: 0.82;
+        }
+
+        .hero-stat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+            gap: 16px;
+            margin-top: 24px;
+        }
+
+        .hero-stat-card {
+            border-radius: 18px;
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            backdrop-filter: blur(10px);
+        }
+
+        .hero-stat-label {
+            font-size: 0.76rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
             opacity: 0.84;
         }
 
-        .hero-meta-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 14px;
-            margin-top: 22px;
-        }
-
-        .hero-meta-card {
-            padding: 16px;
-            border-radius: 18px;
-            background: rgba(255, 255, 255, 0.12);
-            border: 1px solid rgba(255, 255, 255, 0.16);
-        }
-
-        .hero-meta-label {
-            font-size: 0.76rem;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-            opacity: 0.8;
-        }
-
-        .hero-meta-value {
+        .hero-stat-value {
             margin-top: 6px;
-            font-size: 1.4rem;
+            font-size: 1.55rem;
+            line-height: 1.1;
             font-weight: 800;
         }
 
-        .hero-meta-note {
-            margin-top: 4px;
+        .hero-stat-note {
+            margin-top: 6px;
             font-size: 0.82rem;
-            opacity: 0.76;
+            opacity: 0.78;
         }
 
-        .range-pill {
+        .quick-filter {
             display: inline-flex;
             align-items: center;
             gap: 8px;
@@ -67,132 +69,85 @@
             font-weight: 600;
         }
 
-        .range-pill:hover {
-            color: #173652;
-            background: #eef6ff;
+        .quick-filter:hover {
+            background: #eef7ff;
+            color: #14314d;
         }
 
-        .kpi-card {
-            border: 1px solid var(--line);
-            border-radius: 20px;
-            padding: 18px;
-            background: #fff;
-            height: 100%;
-            box-shadow: 0 12px 24px rgba(15, 41, 68, 0.06);
-        }
-
-        .kpi-label {
-            color: #68839f;
-            font-size: 0.82rem;
-            margin-bottom: 8px;
-        }
-
-        .kpi-value {
-            font-size: 1.6rem;
-            line-height: 1.1;
-            font-weight: 800;
-            color: #102f49;
-        }
-
-        .trend-pill {
+        .active-filter-chip {
             display: inline-flex;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
+            padding: 8px 12px;
             border-radius: 999px;
-            padding: 6px 10px;
-            font-size: 0.78rem;
+            background: #eef8f6;
+            color: #0f5f58;
+            font-size: 0.84rem;
+            font-weight: 600;
+        }
+
+        .customer-name {
+            font-size: 0.98rem;
             font-weight: 700;
+            color: #12304d;
         }
 
-        .trend-pill--up {
-            color: #166534;
-            background: #dcfce7;
+        .table-subtext {
+            color: #6b8298;
+            font-size: 0.83rem;
         }
 
-        .trend-pill--down {
-            color: #be123c;
-            background: #ffe4e6;
+        .activity-track {
+            height: 10px;
+            border-radius: 999px;
+            overflow: hidden;
+            background: #e7edf4;
         }
 
-        .detail-list {
+        .activity-track > span {
+            display: block;
+            height: 100%;
+            border-radius: inherit;
+            background: linear-gradient(90deg, #0f766e, #22c55e);
+        }
+
+        .highlight-list {
             display: grid;
-            gap: 14px;
+            gap: 12px;
         }
 
-        .detail-item {
+        .highlight-item {
+            display: block;
+            padding: 14px;
+            border-radius: 16px;
+            border: 1px solid #e3ebf3;
+            background: #fbfdff;
+            color: inherit;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+        }
+
+        .highlight-item:hover {
+            transform: translateY(-2px);
+            border-color: #c7dae9;
+            box-shadow: 0 12px 24px rgba(15, 41, 68, 0.08);
+        }
+
+        .metric-mini {
             display: flex;
             justify-content: space-between;
+            align-items: center;
             gap: 12px;
-            padding-bottom: 12px;
-            border-bottom: 1px solid #edf2f8;
+            padding: 12px 0;
+            border-bottom: 1px solid #edf2f7;
         }
 
-        .detail-item:last-child {
+        .metric-mini:last-child {
             padding-bottom: 0;
             border-bottom: none;
         }
 
-        .status-list {
-            display: grid;
-            gap: 14px;
-        }
-
-        .status-item {
-            display: grid;
-            gap: 8px;
-        }
-
-        .status-item-top {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .status-bar {
-            height: 10px;
-            border-radius: 999px;
-            overflow: hidden;
-            background: #e8eef4;
-        }
-
-        .status-bar > span {
-            display: block;
-            height: 100%;
-            border-radius: inherit;
-        }
-
-        .status-bar--primary > span {
-            background: linear-gradient(90deg, #1d4ed8, #38bdf8);
-        }
-
-        .status-bar--teal > span {
-            background: linear-gradient(90deg, #0f766e, #14b8a6);
-        }
-
-        .insight-list {
-            display: grid;
-            gap: 12px;
-        }
-
-        .insight-item {
-            display: flex;
-            gap: 10px;
-            padding: 12px 14px;
-            border-radius: 16px;
-            background: #f8fbff;
-            border: 1px solid #e5edf6;
-            color: #35516d;
-        }
-
-        .insight-item i {
-            margin-top: 3px;
-            color: #0f766e;
-        }
-
-        .table-note {
-            color: #68839f;
-            font-size: 0.83rem;
+        .metric-mini strong {
+            font-size: 1.08rem;
         }
 
         .empty-state {
@@ -203,137 +158,84 @@
             color: #68839f;
             background: #fbfdff;
         }
+
+        @media (max-width: 767px) {
+            .hero-stat-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
     </style>
 @endpush
 
 @section('content')
     @php
-        $quickRanges = [
-            [
-                'label' => '7 ngày gần đây',
-                'query' => [
-                    'tu_ngay' => now()->copy()->subDays(6)->toDateString(),
-                    'den_ngay' => now()->toDateString(),
-                ],
-            ],
-            [
-                'label' => '30 ngày gần đây',
-                'query' => [
-                    'tu_ngay' => now()->copy()->subDays(29)->toDateString(),
-                    'den_ngay' => now()->toDateString(),
-                ],
-            ],
-            [
-                'label' => 'Tháng này',
-                'query' => [
-                    'tu_ngay' => now()->copy()->startOfMonth()->toDateString(),
-                    'den_ngay' => now()->toDateString(),
-                ],
-            ],
-            [
-                'label' => '90 ngày',
-                'query' => [
-                    'tu_ngay' => now()->copy()->subDays(89)->toDateString(),
-                    'den_ngay' => now()->toDateString(),
-                ],
-            ],
+        $quickFilters = [
+            ['label' => 'Khách hoạt động', 'query' => array_filter(array_merge(request()->only('tu_khoa'), ['trang_thai' => 'hoat_dong']))],
+            ['label' => 'Khách tạm khóa', 'query' => array_filter(array_merge(request()->only('tu_khoa'), ['trang_thai' => 'tam_khoa']))],
+            ['label' => 'Hạng vàng', 'query' => array_filter(array_merge(request()->only('tu_khoa', 'trang_thai'), ['hang_khach_hang' => 'vang']))],
+            ['label' => 'Kim cương', 'query' => array_filter(array_merge(request()->only('tu_khoa', 'trang_thai'), ['hang_khach_hang' => 'kim_cuong']))],
         ];
 
-        $formatBienDong = function (float $giaTri) {
-            return [
-                'text' => ($giaTri > 0 ? '+' : '') . number_format($giaTri, 1, ',', '.') . '%',
-                'class' => $giaTri >= 0 ? 'trend-pill trend-pill--up' : 'trend-pill trend-pill--down',
-                'icon' => $giaTri >= 0 ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down',
-            ];
-        };
+        $coBoLoc = filled($tuKhoa) || filled($hangKhachHang) || filled($trangThai);
 
-        $trendDoanhThu = $formatBienDong($bienDongDoanhThu);
-        $trendDatPhong = $formatBienDong($bienDongDatPhong);
-        $trendDongTien = $formatBienDong($bienDongDongTien);
+        $tongKhach = max(1, $thongKe['tong_hien_thi']);
 
-        $kpiCards = [
-            [
-                'label' => 'Doanh thu phát sinh',
-                'value' => number_format((float) $tongDoanhThuHoaDon, 0, ',', '.') . ' VNĐ',
-                'note' => 'Tổng ' . $tongHoaDon . ' hóa đơn trong kỳ',
-                'trend' => $trendDoanhThu,
-            ],
-            [
-                'label' => 'Thu hồi hóa đơn kỳ này',
-                'value' => number_format((float) $tongThuHoiHoaDonTrongKy, 0, ',', '.') . ' VNĐ',
-                'note' => 'Tỷ lệ thu hồi ' . number_format((float) $tyLeThuHoi, 1, ',', '.') . '%',
-                'trend' => null,
-            ],
-            [
-                'label' => 'Dòng tiền thu trong kỳ',
-                'value' => number_format((float) $dongTienThuTrongKy, 0, ',', '.') . ' VNĐ',
-                'note' => 'So với kỳ trước',
-                'trend' => $trendDongTien,
-            ],
-            [
-                'label' => 'Tổng đặt phòng',
-                'value' => $tongDatPhong,
-                'note' => 'Hoàn tất ' . number_format((float) $tyLeHoanTatDatPhong, 1, ',', '.') . '%',
-                'trend' => $trendDatPhong,
-            ],
-            [
-                'label' => 'Hủy phòng',
-                'value' => $datPhongDaHuy,
-                'note' => 'Tỷ lệ hủy ' . number_format((float) $tyLeHuy, 1, ',', '.') . '%',
-                'trend' => null,
-            ],
-            [
-                'label' => 'Công suất phòng',
-                'value' => number_format((float) $congSuatPhong, 1, ',', '.') . '%',
-                'note' => $tongDemDaDat . '/' . $tongDemKhaDung . ' đêm phòng đã dùng',
-                'trend' => null,
-            ],
+        $tongHopChamSoc = [
+            ['label' => 'Đang hoạt động', 'value' => $thongKe['hoat_dong'], 'class' => 'chip chip-success'],
+            ['label' => 'Tạm khóa', 'value' => $thongKe['tam_khoa'], 'class' => 'chip chip-warning'],
+            ['label' => 'VIP', 'value' => $thongKe['vip'], 'class' => 'chip chip-info'],
+            ['label' => 'Có liên hệ', 'value' => $thongKe['co_lien_he'], 'class' => 'chip chip-neutral'],
+        ];
+
+        $mauHang = [
+            'kim_cuong' => 'chip chip-info',
+            'vang' => 'chip chip-warning',
+            'bac' => 'chip chip-neutral',
+            'thuong' => 'chip chip-success',
+        ];
+
+        $nhanNhom = [
+            'trung_thanh' => ['label' => 'Trung thành', 'class' => 'chip chip-info'],
+            'tiem_nang' => ['label' => 'Tiềm năng', 'class' => 'chip chip-warning'],
+            'moi' => ['label' => 'Mới', 'class' => 'chip chip-neutral'],
         ];
     @endphp
 
-    <div class="premium-card report-hero mb-4">
+    <div class="premium-card customer-hero mb-4">
         <div class="card-body p-4 p-lg-5">
             <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
                 <div>
-                    <h2 class="section-title">Báo cáo thống kê</h2>
-                    <p class="section-subtitle">Theo dõi hiệu suất vận hành, doanh thu, công nợ và xu hướng đặt phòng theo từng giai đoạn.</p>
+                    <h2 class="section-title">Quản lý khách hàng</h2>
+                    <p class="section-subtitle">Theo dõi hồ sơ, giá trị giao dịch, mức độ quay lại và nhóm khách cần ưu tiên chăm sóc.</p>
                 </div>
 
                 <div class="d-flex flex-wrap gap-2">
-                    <span class="btn btn-light fw-semibold disabled">
-                        <i class="fa-regular fa-calendar me-2"></i>{{ \Carbon\Carbon::parse($tuNgay)->format('d/m/Y') }} - {{ \Carbon\Carbon::parse($denNgay)->format('d/m/Y') }}
-                    </span>
-                </div>
-            </div>
-
-            <div class="d-flex flex-wrap gap-2 mt-3">
-                @foreach($quickRanges as $range)
-                    <a href="{{ route('bao-cao.index', $range['query']) }}" class="range-pill">
-                        <i class="fa-regular fa-clock"></i>{{ $range['label'] }}
+                    <a href="{{ route('dat-phong.index') }}" class="btn btn-light fw-semibold">
+                        <i class="fa-solid fa-calendar-check me-2"></i>Xem đặt phòng
                     </a>
-                @endforeach
+                </div>
             </div>
 
-            <div class="hero-meta-grid">
-                <div class="hero-meta-card">
-                    <div class="hero-meta-label">Số ngày báo cáo</div>
-                    <div class="hero-meta-value">{{ $soNgayBaoCao }}</div>
-                    <div class="hero-meta-note">Khoảng thời gian đang phân tích</div>
+            <div class="hero-stat-grid">
+                <div class="hero-stat-card">
+                    <div class="hero-stat-label">Khách đang hiển thị</div>
+                    <div class="hero-stat-value">{{ $thongKe['tong_hien_thi'] }}</div>
+                    <div class="hero-stat-note">Toàn hệ thống: {{ $thongKe['tong_toan_he_thong'] }}</div>
                 </div>
-                <div class="hero-meta-card">
-                    <div class="hero-meta-label">Tổng phòng</div>
-                    <div class="hero-meta-value">{{ $tongPhong }}</div>
-                    <div class="hero-meta-note">Năng lực phục vụ hiện tại</div>
+                <div class="hero-stat-card">
+                    <div class="hero-stat-label">Khách hoạt động</div>
+                    <div class="hero-stat-value">{{ $thongKe['hoat_dong'] }}</div>
+                    <div class="hero-stat-note">{{ $thongKe['vip'] }} khách thuộc nhóm VIP</div>
                 </div>
-                <div class="hero-meta-card">
-                    <div class="hero-meta-label">Đang xử lý</div>
-                    <div class="hero-meta-value">{{ $datPhongDangXuLy }}</div>
-                    <div class="hero-meta-note">Đơn đặt phòng chưa hoàn tất</div>
+                <div class="hero-stat-card">
+                    <div class="hero-stat-label">Khách quay lại</div>
+                    <div class="hero-stat-value">{{ $thongKe['quay_lai'] }}</div>
+                    <div class="hero-stat-note">{{ $thongKe['tong_luot_dat'] }} lượt đặt trong bộ lọc hiện tại</div>
                 </div>
-                <div class="hero-meta-card">
-                    <div class="hero-meta-label">Công nợ mở</div>
-                    <div class="hero-meta-value">{{ number_format((float) $congNo, 0, ',', '.') }}</div>
-                    <div class="hero-meta-note">VNĐ còn lại trên hóa đơn trong kỳ</div>
+                <div class="hero-stat-card">
+                    <div class="hero-stat-label">Doanh thu theo khách</div>
+                    <div class="hero-stat-value">{{ number_format((float) $thongKe['tong_doanh_thu'], 0, ',', '.') }}</div>
+                    <div class="hero-stat-note">{{ $thongKe['co_lien_he'] }} hồ sơ có đủ kênh liên hệ cơ bản</div>
                 </div>
             </div>
         </div>
@@ -341,254 +243,81 @@
 
     <div class="premium-card mb-4">
         <div class="card-body p-4">
+            <div class="d-flex flex-wrap gap-2 mb-3">
+                @foreach($quickFilters as $filter)
+                    <a href="{{ route('khach-hang.index', $filter['query']) }}" class="quick-filter">
+                        <i class="fa-solid fa-filter"></i>{{ $filter['label'] }}
+                    </a>
+                @endforeach
+            </div>
+
             <form method="GET" class="row g-3">
-                <div class="col-md-4">
-                    <label class="form-label">Từ ngày</label>
-                    <input type="date" name="tu_ngay" class="form-control" value="{{ $tuNgay }}">
+                <div class="col-xl-6">
+                    <label class="form-label">Từ khóa</label>
+                    <input type="text" name="tu_khoa" class="form-control" value="{{ $tuKhoa }}" placeholder="Mã KH, tên, số điện thoại, email, giấy tờ">
                 </div>
 
-                <div class="col-md-4">
-                    <label class="form-label">Đến ngày</label>
-                    <input type="date" name="den_ngay" class="form-control" value="{{ $denNgay }}">
+                <div class="col-xl-2 col-md-4">
+                    <label class="form-label">Hạng khách hàng</label>
+                    <select name="hang_khach_hang" class="form-select">
+                        <option value="">Tất cả</option>
+                        <option value="thuong" @selected($hangKhachHang === 'thuong')>Thường</option>
+                        <option value="bac" @selected($hangKhachHang === 'bac')>Bạc</option>
+                        <option value="vang" @selected($hangKhachHang === 'vang')>Vàng</option>
+                        <option value="kim_cuong" @selected($hangKhachHang === 'kim_cuong')>Kim cương</option>
+                    </select>
                 </div>
 
-                <div class="col-md-2 d-flex align-items-end">
-                    <button class="btn btn-gradient w-100">Xem báo cáo</button>
+                <div class="col-xl-2 col-md-4">
+                    <label class="form-label">Trạng thái</label>
+                    <select name="trang_thai" class="form-select">
+                        <option value="">Tất cả</option>
+                        <option value="hoat_dong" @selected($trangThai === 'hoat_dong')>Hoạt động</option>
+                        <option value="tam_khoa" @selected($trangThai === 'tam_khoa')>Tạm khóa</option>
+                    </select>
                 </div>
 
-                <div class="col-md-2 d-flex align-items-end">
-                    <a href="{{ route('bao-cao.index') }}" class="btn btn-soft w-100">Đặt lại</a>
+                <div class="col-xl-1 col-md-6 d-flex align-items-end">
+                    <button class="btn btn-gradient w-100">Lọc</button>
+                </div>
+
+                <div class="col-xl-1 col-md-6 d-flex align-items-end">
+                    <a href="{{ route('khach-hang.index') }}" class="btn btn-soft w-100">Đặt lại</a>
                 </div>
             </form>
-        </div>
-    </div>
 
-    <div class="row g-4 mb-4">
-        @foreach($kpiCards as $card)
-            <div class="col-xl-4 col-md-6">
-                <div class="kpi-card">
-                    <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
-                        <div class="kpi-label">{{ $card['label'] }}</div>
-                        @if($card['trend'])
-                            <span class="{{ $card['trend']['class'] }}">
-                                <i class="fa-solid {{ $card['trend']['icon'] }}"></i>{{ $card['trend']['text'] }}
-                            </span>
-                        @endif
-                    </div>
-                    <div class="kpi-value">{{ $card['value'] }}</div>
-                    <div class="table-note mt-2">{{ $card['note'] }}</div>
+            @if($coBoLoc)
+                <div class="d-flex flex-wrap gap-2 mt-3 pt-3 border-top">
+                    @if($tuKhoa)
+                        <span class="active-filter-chip"><i class="fa-solid fa-magnifying-glass"></i>{{ $tuKhoa }}</span>
+                    @endif
+                    @if($hangKhachHang)
+                        <span class="active-filter-chip"><i class="fa-solid fa-crown"></i>{{ \App\Support\HienThiGiaTri::nhanGiaTri($hangKhachHang) }}</span>
+                    @endif
+                    @if($trangThai)
+                        <span class="active-filter-chip"><i class="fa-solid fa-circle-dot"></i>{{ \App\Support\HienThiGiaTri::nhanGiaTri($trangThai) }}</span>
+                    @endif
                 </div>
-            </div>
-        @endforeach
-    </div>
-
-    <div class="row g-4 mb-4">
-        <div class="col-xl-8">
-            <div class="premium-card h-100">
-                <div class="card-body p-4">
-                    <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
-                        <div>
-                            <h5 class="fw-bold mb-1">Doanh thu và dòng tiền {{ $moTaCotMoc }}</h5>
-                            <p class="table-note mb-0">So sánh doanh thu phát sinh từ hóa đơn với tiền thu thực tế trong cùng khoảng báo cáo.</p>
-                        </div>
-                    </div>
-                    <canvas id="chartCashflow" height="120"></canvas>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-xl-4">
-            <div class="premium-card h-100">
-                <div class="card-body p-4">
-                    <h5 class="fw-bold mb-3">Cấu phần doanh thu</h5>
-                    <div class="detail-list">
-                        <div class="detail-item">
-                            <div>
-                                <div class="fw-semibold">Tiền phòng</div>
-                                <div class="table-note">Nguồn thu cốt lõi</div>
-                            </div>
-                            <div class="fw-bold">{{ number_format((float) $tongTienPhong, 0, ',', '.') }} VNĐ</div>
-                        </div>
-                        <div class="detail-item">
-                            <div>
-                                <div class="fw-semibold">Dịch vụ</div>
-                                <div class="table-note">Giá trị cộng thêm</div>
-                            </div>
-                            <div class="fw-bold">{{ number_format((float) $tongTienDichVu, 0, ',', '.') }} VNĐ</div>
-                        </div>
-                        <div class="detail-item">
-                            <div>
-                                <div class="fw-semibold">Thuế</div>
-                                <div class="table-note">Khoản cộng trên hóa đơn</div>
-                            </div>
-                            <div class="fw-bold">{{ number_format((float) $tongThue, 0, ',', '.') }} VNĐ</div>
-                        </div>
-                        <div class="detail-item">
-                            <div>
-                                <div class="fw-semibold">Giảm giá</div>
-                                <div class="table-note">Khoản trừ đã áp dụng</div>
-                            </div>
-                            <div class="fw-bold text-danger">-{{ number_format((float) $tongGiamGia, 0, ',', '.') }} VNĐ</div>
-                        </div>
-                        <div class="detail-item">
-                            <div>
-                                <div class="fw-semibold">Giá trị trung bình / hóa đơn</div>
-                                <div class="table-note">Hiệu quả trên mỗi hóa đơn</div>
-                            </div>
-                            <div class="fw-bold">{{ number_format((float) $giaTriHoaDonTrungBinh, 0, ',', '.') }} VNĐ</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row g-4 mb-4">
-        <div class="col-xl-6">
-            <div class="premium-card h-100">
-                <div class="card-body p-4">
-                    <h5 class="fw-bold mb-3">Đặt phòng và hủy phòng {{ $moTaCotMoc }}</h5>
-                    <p class="table-note">Theo dõi xu hướng đơn vào và số lượng đơn hủy để đánh giá hiệu quả xác nhận đặt phòng.</p>
-                    <canvas id="chartBookingTrend" height="120"></canvas>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-xl-3 col-md-6">
-            <div class="premium-card h-100">
-                <div class="card-body p-4">
-                    <h5 class="fw-bold mb-3">Nguồn đặt phòng</h5>
-                    <canvas id="chartSource" height="180"></canvas>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-xl-3 col-md-6">
-            <div class="premium-card h-100">
-                <div class="card-body p-4">
-                    <h5 class="fw-bold mb-3">Phương thức thanh toán</h5>
-                    <canvas id="chartPayment" height="180"></canvas>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row g-4 mb-4">
-        <div class="col-xl-4">
-            <div class="premium-card h-100">
-                <div class="card-body p-4">
-                    <h5 class="fw-bold mb-3">Gợi ý vận hành</h5>
-                    <div class="insight-list">
-                        @foreach($insights as $insight)
-                            <div class="insight-item">
-                                <i class="fa-solid fa-lightbulb"></i>
-                                <div>{{ $insight }}</div>
-                            </div>
-                        @endforeach
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-xl-4">
-            <div class="premium-card h-100">
-                <div class="card-body p-4">
-                    <h5 class="fw-bold mb-3">Trạng thái đặt phòng</h5>
-                    <div class="status-list">
-                        @foreach($phanBoTrangThaiDatPhong as $item)
-                            <div class="status-item">
-                                <div class="status-item-top">
-                                    <div>
-                                        <div class="fw-semibold">{{ $item['label'] }}</div>
-                                        <div class="table-note">{{ number_format((float) $item['percent'], 1, ',', '.') }}%</div>
-                                    </div>
-                                    <span class="chip chip-info">{{ $item['value'] }}</span>
-                                </div>
-                                <div class="status-bar status-bar--primary">
-                                    <span style="width: {{ min(100, max(0, $item['percent'])) }}%"></span>
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-xl-4">
-            <div class="premium-card h-100">
-                <div class="card-body p-4">
-                    <h5 class="fw-bold mb-3">Trạng thái hóa đơn</h5>
-                    <div class="status-list">
-                        @foreach($phanBoTrangThaiHoaDon as $item)
-                            <div class="status-item">
-                                <div class="status-item-top">
-                                    <div>
-                                        <div class="fw-semibold">{{ $item['label'] }}</div>
-                                        <div class="table-note">{{ number_format((float) $item['percent'], 1, ',', '.') }}%</div>
-                                    </div>
-                                    <span class="chip chip-warning">{{ $item['value'] }}</span>
-                                </div>
-                                <div class="status-bar status-bar--teal">
-                                    <span style="width: {{ min(100, max(0, $item['percent'])) }}%"></span>
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
-                </div>
-            </div>
+            @endif
         </div>
     </div>
 
     <div class="row g-4">
-        <div class="col-xl-6">
+        <div class="col-xxl-8">
             <div class="premium-card h-100">
                 <div class="card-body p-4">
-                    <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
+                    <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
                         <div>
-                            <h5 class="fw-bold mb-1">Top phòng hiệu quả</h5>
-                            <p class="table-note mb-0">Xếp hạng theo tổng số đêm đặt trong kỳ.</p>
+                            <h5 class="fw-bold mb-1">Danh sách khách hàng</h5>
+                            <div class="text-muted small">
+                                {{ $thongKe['tong_hien_thi'] }} khách trong bộ lọc hiện tại
+                                • {{ $thongKe['tong_luot_dat'] }} lượt đặt
+                                • {{ number_format((float) $thongKe['tong_doanh_thu'], 0, ',', '.') }} VNĐ
+                            </div>
                         </div>
-                    </div>
-
-                    <div class="table-responsive">
-                        <table class="table align-middle">
-                            <thead>
-                                <tr>
-                                    <th>Phòng</th>
-                                    <th>Số lượt đặt</th>
-                                    <th>Tổng số đêm</th>
-                                    <th>Doanh thu phòng</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse($topPhong as $item)
-                                    <tr>
-                                        <td class="fw-semibold">{{ $item->phong?->so_phong ? 'Phòng ' . $item->phong->so_phong : '-' }}</td>
-                                        <td>{{ $item->so_luot }}</td>
-                                        <td>{{ $item->tong_so_dem }}</td>
-                                        <td class="fw-bold">{{ number_format((float) $item->doanh_thu_phong, 0, ',', '.') }} VNĐ</td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="4" class="py-4">
-                                            <div class="empty-state">Chưa có dữ liệu phòng nổi bật trong khoảng này.</div>
-                                        </td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-xl-6">
-            <div class="premium-card h-100">
-                <div class="card-body p-4">
-                    <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
-                        <div>
-                            <h5 class="fw-bold mb-1">Top khách hàng theo doanh thu</h5>
-                            <p class="table-note mb-0">Tổng hợp từ các hóa đơn phát sinh trong kỳ báo cáo.</p>
+                        <div class="text-end">
+                            <div class="small text-muted">Khách quay lại</div>
+                            <div class="fw-bold">{{ number_format(($thongKe['quay_lai'] / $tongKhach) * 100, 1, ',', '.') }}%</div>
                         </div>
                     </div>
 
@@ -597,152 +326,163 @@
                             <thead>
                                 <tr>
                                     <th>Khách hàng</th>
-                                    <th>Hóa đơn</th>
-                                    <th>Doanh thu</th>
-                                    <th>Đã thu</th>
+                                    <th>Liên hệ</th>
+                                    <th>Đặt phòng và doanh thu</th>
+                                    <th>Thành viên</th>
+                                    <th>Trạng thái</th>
+                                    <th>Hoạt động gần nhất</th>
+                                    <th class="text-end">Thao tác</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @forelse($topKhachHang as $khachHang)
+                                @forelse($danhSachKhachHang as $khachHang)
+                                    @php
+                                        $nhom = $nhanNhom[$khachHang->nhom_khach_hang_hien_thi] ?? $nhanNhom['moi'];
+                                        $lanDatPhongGanNhat = $khachHang->datPhong->first()?->ngay_dat;
+                                    @endphp
+
                                     <tr>
-                                        <td>
-                                            <div class="fw-semibold">{{ $khachHang->ho_ten }}</div>
-                                            <div class="table-note">{{ $khachHang->so_dien_thoai ?: 'Chưa có số điện thoại' }}</div>
+                                        <td style="min-width: 220px;">
+                                            <div class="customer-name">{{ $khachHang->ho_ten }}</div>
+                                            <div class="table-subtext">{{ $khachHang->ma_khach_hang }}</div>
+                                            <div class="table-subtext">{{ $khachHang->quoc_tich ?: 'Chưa cập nhật quốc tịch' }}</div>
                                         </td>
-                                        <td>{{ $khachHang->so_hoa_don }}</td>
-                                        <td class="fw-bold">{{ number_format((float) $khachHang->doanh_thu, 0, ',', '.') }} VNĐ</td>
-                                        <td>{{ number_format((float) $khachHang->da_thu, 0, ',', '.') }} VNĐ</td>
+                                        <td style="min-width: 190px;">
+                                            <div>{{ $khachHang->so_dien_thoai ?: '-' }}</div>
+                                            <div class="table-subtext">{{ $khachHang->email ?: 'Chưa có email' }}</div>
+                                            <div class="table-subtext">{{ $khachHang->so_giay_to ?: 'Chưa có giấy tờ' }}</div>
+                                        </td>
+                                        <td style="min-width: 260px;">
+                                            <div class="fw-semibold">{{ $khachHang->dat_phong_count }} lượt đặt • {{ $khachHang->dat_phong_hoan_tat_count }} hoàn tất</div>
+                                            <div class="table-subtext mb-2">
+                                                Hủy {{ $khachHang->dat_phong_da_huy_count }}
+                                                • Doanh thu {{ number_format((float) $khachHang->tong_doanh_thu, 0, ',', '.') }} VNĐ
+                                            </div>
+                                            <div class="activity-track">
+                                                <span style="width: {{ min(100, max(0, $khachHang->ty_le_hoan_tat)) }}%"></span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="mb-2">
+                                                <span class="{{ $mauHang[$khachHang->hang_khach_hang] ?? 'chip chip-neutral' }}">
+                                                    {{ \App\Support\HienThiGiaTri::nhanGiaTri($khachHang->hang_khach_hang) }}
+                                                </span>
+                                            </div>
+                                            <span class="{{ $nhom['class'] }}">{{ $nhom['label'] }}</span>
+                                        </td>
+                                        <td>
+                                            <div class="mb-2">
+                                                @if($khachHang->trang_thai === 'hoat_dong')
+                                                    <span class="chip chip-success">Hoạt động</span>
+                                                @else
+                                                    <span class="chip chip-warning">Tạm khóa</span>
+                                                @endif
+                                            </div>
+                                            @if($khachHang->co_thong_tin_lien_he)
+                                                <span class="chip chip-neutral">Có thể liên hệ</span>
+                                            @else
+                                                <span class="chip chip-danger">Thiếu liên hệ</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            @if($lanDatPhongGanNhat)
+                                                <div class="fw-semibold">{{ optional($lanDatPhongGanNhat)->format('d/m/Y H:i') }}</div>
+                                                <div class="table-subtext">Tương tác gần nhất</div>
+                                            @else
+                                                <div class="fw-semibold">Chưa có đặt phòng</div>
+                                                <div class="table-subtext">Cần nuôi dưỡng</div>
+                                            @endif
+                                        </td>
+                                        <td class="text-end" style="white-space: nowrap;">
+                                            <a href="{{ route('khach-hang.show', $khachHang) }}" class="btn btn-sm btn-outline-primary">
+                                                <i class="fa-solid fa-eye me-1"></i>Xem
+                                            </a>
+                                            <a href="{{ route('khach-hang.edit', $khachHang) }}" class="btn btn-sm btn-outline-secondary">
+                                                <i class="fa-solid fa-pen"></i>
+                                            </a>
+
+                                            <form action="{{ route('khach-hang.doi-trang-thai', $khachHang) }}" method="POST" class="d-inline">
+                                                @csrf
+                                                @method('PATCH')
+                                                <button type="submit" class="btn btn-sm btn-outline-warning" onclick="return confirm('Đổi trạng thái khách hàng này?')">
+                                                    <i class="fa-solid fa-lock"></i>
+                                                </button>
+                                            </form>
+                                        </td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="4" class="py-4">
-                                            <div class="empty-state">Chưa có khách hàng nổi bật trong khoảng báo cáo này.</div>
+                                        <td colspan="7" class="py-4">
+                                            <div class="empty-state">
+                                                Chưa có khách hàng nào theo bộ lọc hiện tại.
+                                            </div>
                                         </td>
                                     </tr>
                                 @endforelse
                             </tbody>
                         </table>
                     </div>
+
+                    <div class="mt-3">{{ $danhSachKhachHang->links() }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xxl-4">
+            <div class="premium-card mb-4">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+                        <div>
+                            <h5 class="fw-bold mb-1">Khách nổi bật</h5>
+                            <p class="text-muted small mb-0">Ưu tiên nhóm có nhiều lượt đặt hoặc doanh thu cao.</p>
+                        </div>
+                        <span class="chip chip-info">{{ $khachHangNoiBat->count() }} hồ sơ</span>
+                    </div>
+
+                    <div class="highlight-list">
+                        @forelse($khachHangNoiBat as $khachHang)
+                            @php
+                                $nhom = $nhanNhom[$khachHang->nhom_khach_hang_hien_thi] ?? $nhanNhom['moi'];
+                            @endphp
+                            <a href="{{ route('khach-hang.show', $khachHang) }}" class="highlight-item">
+                                <div class="d-flex justify-content-between align-items-start gap-3">
+                                    <div>
+                                        <div class="fw-bold">{{ $khachHang->ho_ten }}</div>
+                                        <div class="table-subtext">{{ $khachHang->ma_khach_hang }}</div>
+                                    </div>
+                                    <span class="{{ $nhom['class'] }}">{{ $nhom['label'] }}</span>
+                                </div>
+
+                                <div class="fw-bold mt-3">{{ number_format((float) $khachHang->tong_doanh_thu, 0, ',', '.') }} VNĐ</div>
+                                <div class="table-subtext mt-1">{{ $khachHang->dat_phong_count }} lượt đặt • {{ $khachHang->dat_phong_hoan_tat_count }} hoàn tất</div>
+                            </a>
+                        @empty
+                            <div class="empty-state">
+                                Chưa có khách nổi bật trong bộ lọc hiện tại.
+                            </div>
+                        @endforelse
+                    </div>
+                </div>
+            </div>
+
+            <div class="premium-card">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-3">Tổng quan chăm sóc</h5>
+
+                    @foreach($tongHopChamSoc as $item)
+                        <div class="metric-mini">
+                            <div>
+                                <div class="fw-semibold">{{ $item['label'] }}</div>
+                                <div class="table-subtext">{{ number_format(($item['value'] / $tongKhach) * 100, 1, ',', '.') }}% danh sách</div>
+                            </div>
+                            <div class="text-end">
+                                <strong>{{ $item['value'] }}</strong>
+                                <div class="mt-1"><span class="{{ $item['class'] }}">{{ $item['label'] }}</span></div>
+                            </div>
+                        </div>
+                    @endforeach
                 </div>
             </div>
         </div>
     </div>
-@endsection
-
-@section('scripts')
-    @parent
-    <script>
-        const nhanXuHuong = @json($nhanXuHuong);
-        const duLieuDoanhThu = @json($duLieuDoanhThu);
-        const duLieuThuTien = @json($duLieuThuTien);
-        const duLieuDatPhong = @json($duLieuDatPhong);
-        const duLieuDatHuy = @json($duLieuDatHuy);
-        const nhanNguonDat = @json(collect($phanBoNguonDat)->pluck('label')->all());
-        const duLieuNguonDat = @json(collect($phanBoNguonDat)->pluck('value')->all());
-        const nhanThanhToan = @json(collect($phanBoThanhToan)->pluck('label')->all());
-        const duLieuThanhToan = @json(collect($phanBoThanhToan)->pluck('value')->all());
-
-        const chartCashflow = document.getElementById('chartCashflow');
-        if (chartCashflow) {
-            new Chart(chartCashflow, {
-                type: 'line',
-                data: {
-                    labels: nhanXuHuong,
-                    datasets: [
-                        {
-                            label: 'Doanh thu phát sinh',
-                            data: duLieuDoanhThu,
-                            borderColor: '#0f766e',
-                            backgroundColor: 'rgba(15, 118, 110, 0.14)',
-                            fill: true,
-                            tension: 0.35,
-                        },
-                        {
-                            label: 'Tiền thu thực tế',
-                            data: duLieuThuTien,
-                            borderColor: '#2563eb',
-                            backgroundColor: 'rgba(37, 99, 235, 0.08)',
-                            fill: true,
-                            tension: 0.35,
-                        }
-                    ],
-                },
-                options: {
-                    responsive: true,
-                    interaction: { mode: 'index', intersect: false },
-                    plugins: { legend: { position: 'bottom' } },
-                },
-            });
-        }
-
-        const chartBookingTrend = document.getElementById('chartBookingTrend');
-        if (chartBookingTrend) {
-            new Chart(chartBookingTrend, {
-                type: 'bar',
-                data: {
-                    labels: nhanXuHuong,
-                    datasets: [
-                        {
-                            label: 'Đặt phòng',
-                            data: duLieuDatPhong,
-                            backgroundColor: '#1d4ed8',
-                            borderRadius: 8,
-                        },
-                        {
-                            label: 'Hủy phòng',
-                            data: duLieuDatHuy,
-                            backgroundColor: '#e11d48',
-                            borderRadius: 8,
-                        }
-                    ],
-                },
-                options: {
-                    responsive: true,
-                    plugins: { legend: { position: 'bottom' } },
-                },
-            });
-        }
-
-        const doughnutColors = ['#2563eb', '#0f766e', '#f59e0b', '#e11d48', '#64748b'];
-
-        const chartSource = document.getElementById('chartSource');
-        if (chartSource) {
-            new Chart(chartSource, {
-                type: 'doughnut',
-                data: {
-                    labels: nhanNguonDat,
-                    datasets: [{
-                        data: duLieuNguonDat,
-                        backgroundColor: doughnutColors,
-                        borderWidth: 0,
-                    }],
-                },
-                options: {
-                    responsive: true,
-                    plugins: { legend: { position: 'bottom' } },
-                    cutout: '62%',
-                },
-            });
-        }
-
-        const chartPayment = document.getElementById('chartPayment');
-        if (chartPayment) {
-            new Chart(chartPayment, {
-                type: 'doughnut',
-                data: {
-                    labels: nhanThanhToan,
-                    datasets: [{
-                        data: duLieuThanhToan,
-                        backgroundColor: ['#0f766e', '#2563eb', '#f59e0b', '#8b5cf6', '#64748b'],
-                        borderWidth: 0,
-                    }],
-                },
-                options: {
-                    responsive: true,
-                    plugins: { legend: { position: 'bottom' } },
-                    cutout: '62%',
-                },
-            });
-        }
-    </script>
 @endsection
