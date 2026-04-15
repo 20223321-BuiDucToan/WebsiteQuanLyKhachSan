@@ -13,6 +13,7 @@ class HienThiGiaTri
             'da_tra_phong' => 'Đã trả phòng',
             'da_huy' => 'Đã hủy',
             'da_dat' => 'Đã đặt',
+            'dang_o' => 'Đang ở',
             'dang_su_dung' => 'Đang sử dụng',
             'bao_tri' => 'Bảo trì',
             'don_dep' => 'Dọn dẹp',
@@ -32,6 +33,7 @@ class HienThiGiaTri
             'that_bai' => 'Thất bại',
             'truc_tiep' => 'Trực tiếp',
             'dien_thoai' => 'Điện thoại',
+            'zalo' => 'Zalo',
             'website' => 'Website',
             'khac' => 'Khác',
             'tien_mat' => 'Tiền mặt',
@@ -54,4 +56,3 @@ class HienThiGiaTri
         return $duLieu[$giaTri] ?? ucwords(str_replace('_', ' ', $giaTri));
     }
 }
-
