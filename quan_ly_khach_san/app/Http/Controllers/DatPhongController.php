@@ -9,6 +9,7 @@ use App\Models\KhachHang;
 use App\Models\Phong;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -32,6 +33,9 @@ class DatPhongController extends Controller
     public function index(Request $request)
     {
         $request->validate([
+            'tu_khoa' => ['nullable', 'string', 'max:100'],
+            'trang_thai' => ['nullable', Rule::in(self::TRANG_THAI_DAT_PHONG)],
+            'nguon_dat' => ['nullable', Rule::in(['truc_tiep', 'website', 'dien_thoai', 'zalo', 'khac'])],
             'tu_ngay' => ['nullable', 'date'],
             'den_ngay' => ['nullable', 'date', 'after_or_equal:tu_ngay'],
         ]);
@@ -42,34 +46,27 @@ class DatPhongController extends Controller
         $tuNgay = $request->input('tu_ngay');
         $denNgay = $request->input('den_ngay');
 
-        $danhSachDatPhong = DatPhong::query()
-            ->with(['khachHang', 'chiTietDatPhong.phong'])
-            ->when($tuKhoa, function ($query) use ($tuKhoa) {
-                $query->where(function ($innerQuery) use ($tuKhoa) {
-                    $innerQuery->where('ma_dat_phong', 'like', "%{$tuKhoa}%")
-                        ->orWhereHas('khachHang', function ($khachHangQuery) use ($tuKhoa) {
-                            $khachHangQuery
-                                ->where('ho_ten', 'like', "%{$tuKhoa}%")
-                                ->orWhere('so_dien_thoai', 'like', "%{$tuKhoa}%")
-                                ->orWhere('email', 'like', "%{$tuKhoa}%");
-                        });
-                });
-            })
-            ->when($trangThai, function ($query) use ($trangThai) {
-                $query->where('trang_thai', $trangThai);
-            })
-            ->when($nguonDat, function ($query) use ($nguonDat) {
-                $query->where('nguon_dat', $nguonDat);
-            })
-            ->when($tuNgay, function ($query) use ($tuNgay) {
-                $query->whereDate('ngay_nhan_phong_du_kien', '>=', $tuNgay);
-            })
-            ->when($denNgay, function ($query) use ($denNgay) {
-                $query->whereDate('ngay_tra_phong_du_kien', '<=', $denNgay);
-            })
+        $truyVanDatPhong = $this->taoTruyVanDatPhong($tuKhoa, $trangThai, $nguonDat, $tuNgay, $denNgay);
+
+        $danhSachDatPhong = (clone $truyVanDatPhong)
             ->latest('id')
             ->paginate(12)
             ->withQueryString();
+
+        $danhSachDatPhong->setCollection(
+            $danhSachDatPhong->getCollection()->map(fn(DatPhong $datPhong) => $this->boSungDuLieuDatPhong($datPhong))
+        );
+
+        $danhSachDatPhongDaLoc = (clone $truyVanDatPhong)
+            ->get()
+            ->map(fn(DatPhong $datPhong) => $this->boSungDuLieuDatPhong($datPhong));
+
+        $thongKe = $this->tongHopDatPhong($danhSachDatPhongDaLoc);
+        $datPhongCanChuY = $danhSachDatPhongDaLoc
+            ->filter(fn(DatPhong $datPhong) => $datPhong->can_xu_ly_ngay)
+            ->sortByDesc(fn(DatPhong $datPhong) => ($datPhong->muc_do_uu_tien === 'cao' ? 1000000000000 : 0) + $datPhong->tong_tien_tam_tinh)
+            ->take(5)
+            ->values();
 
         return view('dat_phong.index', compact(
             'danhSachDatPhong',
@@ -77,7 +74,9 @@ class DatPhongController extends Controller
             'trangThai',
             'nguonDat',
             'tuNgay',
-            'denNgay'
+            'denNgay',
+            'thongKe',
+            'datPhongCanChuY'
         ));
     }
 
@@ -89,8 +88,20 @@ class DatPhongController extends Controller
             ->orderBy('so_phong')
             ->get();
 
+        $giaTheoPhong = $danhSachPhong->map(function (Phong $phong) {
+            return (float) ($phong->gia_mac_dinh ?? $phong->loaiPhong?->gia_mot_dem ?? 0);
+        });
+
+        $thongKePhong = [
+            'tong_hoat_dong' => $danhSachPhong->count(),
+            'san_sang_hom_nay' => $danhSachPhong->filter(fn(Phong $phong) => in_array($phong->trang_thai, ['trong', 'don_dep'], true))->count(),
+            'dang_su_dung' => $danhSachPhong->where('trang_thai', 'dang_su_dung')->count(),
+            'gia_trung_binh' => $giaTheoPhong->filter(fn(float $gia) => $gia > 0)->avg() ?? 0,
+        ];
+
         return view('dat_phong.create', [
             'danhSachPhong' => $danhSachPhong,
+            'thongKePhong' => $thongKePhong,
         ]);
     }
 
@@ -187,22 +198,18 @@ class DatPhongController extends Controller
             'khachHang',
             'nguoiTao',
             'chiTietDatPhong.phong.loaiPhong',
-            'hoaDon',
+            'hoaDon.thanhToan',
         ]);
 
-        $tongTienPhong = $datPhong->chiTietDatPhong->sum(function (ChiTietDatPhong $chiTiet) {
-            return (float) $chiTiet->gia_phong * (int) $chiTiet->so_dem;
-        });
-
-        $hoaDonHienTai = $datPhong->hoaDon
-            ->where('trang_thai', '!=', 'da_huy')
-            ->sortByDesc('id')
-            ->first();
+        $datPhong = $this->boSungDuLieuDatPhong($datPhong);
+        $hoaDonHienTai = $datPhong->hoa_don_hien_tai;
+        $timeline = $this->taoTimelineDatPhong($datPhong, $hoaDonHienTai);
 
         return view('dat_phong.show', [
             'datPhong' => $datPhong,
-            'tongTienPhong' => $tongTienPhong,
+            'tongTienPhong' => $datPhong->tong_tien_tam_tinh,
             'hoaDonHienTai' => $hoaDonHienTai,
+            'timeline' => $timeline,
         ]);
     }
 
@@ -267,6 +274,174 @@ class DatPhongController extends Controller
         return redirect()
             ->back()
             ->with('success', $thongBao);
+    }
+
+    private function taoTruyVanDatPhong(?string $tuKhoa, ?string $trangThai, ?string $nguonDat, ?string $tuNgay, ?string $denNgay)
+    {
+        return DatPhong::query()
+            ->with(['khachHang', 'chiTietDatPhong.phong.loaiPhong', 'hoaDon' => function ($query) {
+                $query->where('trang_thai', '!=', 'da_huy')->latest('id');
+            }])
+            ->when($tuKhoa, function ($query) use ($tuKhoa) {
+                $query->where(function ($innerQuery) use ($tuKhoa) {
+                    $innerQuery->where('ma_dat_phong', 'like', "%{$tuKhoa}%")
+                        ->orWhereHas('khachHang', function ($khachHangQuery) use ($tuKhoa) {
+                            $khachHangQuery
+                                ->where('ho_ten', 'like', "%{$tuKhoa}%")
+                                ->orWhere('so_dien_thoai', 'like', "%{$tuKhoa}%")
+                                ->orWhere('email', 'like', "%{$tuKhoa}%");
+                        });
+                });
+            })
+            ->when($trangThai, function ($query) use ($trangThai) {
+                $query->where('trang_thai', $trangThai);
+            })
+            ->when($nguonDat, function ($query) use ($nguonDat) {
+                $query->where('nguon_dat', $nguonDat);
+            })
+            ->when($tuNgay, function ($query) use ($tuNgay) {
+                $query->whereDate('ngay_nhan_phong_du_kien', '>=', $tuNgay);
+            })
+            ->when($denNgay, function ($query) use ($denNgay) {
+                $query->whereDate('ngay_tra_phong_du_kien', '<=', $denNgay);
+            });
+    }
+
+    private function boSungDuLieuDatPhong(DatPhong $datPhong): DatPhong
+    {
+        $tongTienTamTinh = (float) $datPhong->chiTietDatPhong->sum(function (ChiTietDatPhong $chiTiet) {
+            return (float) $chiTiet->gia_phong * (int) $chiTiet->so_dem;
+        });
+
+        $tongSoPhong = $datPhong->chiTietDatPhong->count();
+        $tongSoDem = (int) $datPhong->chiTietDatPhong->sum('so_dem');
+        $hoaDonHienTai = $datPhong->hoaDon
+            ->where('trang_thai', '!=', 'da_huy')
+            ->sortByDesc('id')
+            ->first();
+
+        $soTienDaThuHoaDon = $hoaDonHienTai && $hoaDonHienTai->relationLoaded('thanhToan')
+            ? (float) $hoaDonHienTai->thanhToan->where('trang_thai', 'thanh_cong')->sum('so_tien')
+            : 0;
+        $soTienConLaiHoaDon = $hoaDonHienTai
+            ? max(0, (float) $hoaDonHienTai->tong_tien - $soTienDaThuHoaDon)
+            : 0;
+
+        $homNay = now()->startOfDay();
+        $ngayNhanPhong = $datPhong->ngay_nhan_phong_du_kien?->copy()->startOfDay();
+        $ngayTraPhong = $datPhong->ngay_tra_phong_du_kien?->copy()->startOfDay();
+
+        $canXacNhan = $datPhong->trang_thai === 'cho_xac_nhan';
+        $nhanPhongHomNay = in_array($datPhong->trang_thai, ['cho_xac_nhan', 'da_xac_nhan'], true)
+            && $ngayNhanPhong
+            && $ngayNhanPhong->equalTo($homNay);
+        $nhanPhongSom = in_array($datPhong->trang_thai, ['cho_xac_nhan', 'da_xac_nhan'], true)
+            && $ngayNhanPhong
+            && $ngayNhanPhong->greaterThan($homNay)
+            && $ngayNhanPhong->lessThanOrEqualTo($homNay->copy()->addDay());
+        $quaHanTraPhong = $datPhong->trang_thai === 'da_nhan_phong'
+            && $ngayTraPhong
+            && $ngayTraPhong->lt($homNay);
+        $sapTraPhong = $datPhong->trang_thai === 'da_nhan_phong'
+            && $ngayTraPhong
+            && $ngayTraPhong->greaterThanOrEqualTo($homNay)
+            && $ngayTraPhong->lessThanOrEqualTo($homNay->copy()->addDay());
+
+        $mucDoUuTien = 'thap';
+        $ghiChuVanHanh = 'Đơn đang ở trạng thái theo dõi bình thường.';
+
+        if ($quaHanTraPhong) {
+            $mucDoUuTien = 'cao';
+            $ghiChuVanHanh = 'Khách đang quá hạn trả phòng, cần xử lý ngay.';
+        } elseif ($canXacNhan) {
+            $mucDoUuTien = 'cao';
+            $ghiChuVanHanh = 'Đơn mới chờ xác nhận từ bộ phận vận hành.';
+        } elseif ($nhanPhongHomNay) {
+            $mucDoUuTien = 'cao';
+            $ghiChuVanHanh = 'Khách dự kiến nhận phòng hôm nay.';
+        } elseif ($sapTraPhong) {
+            $mucDoUuTien = 'trung_binh';
+            $ghiChuVanHanh = 'Đơn sắp đến thời điểm trả phòng.';
+        } elseif ($nhanPhongSom) {
+            $mucDoUuTien = 'trung_binh';
+            $ghiChuVanHanh = 'Đơn có lịch nhận phòng trong 24 giờ tới.';
+        }
+
+        $datPhong->setAttribute('tong_tien_tam_tinh', $tongTienTamTinh);
+        $datPhong->setAttribute('tong_so_phong', $tongSoPhong);
+        $datPhong->setAttribute('tong_so_dem', $tongSoDem);
+        $datPhong->setAttribute('hoa_don_hien_tai', $hoaDonHienTai);
+        $datPhong->setAttribute('so_tien_da_thu_hoa_don', $soTienDaThuHoaDon);
+        $datPhong->setAttribute('so_tien_con_lai_hoa_don', $soTienConLaiHoaDon);
+        $datPhong->setAttribute('can_xu_ly_ngay', in_array($mucDoUuTien, ['cao', 'trung_binh'], true));
+        $datPhong->setAttribute('muc_do_uu_tien', $mucDoUuTien);
+        $datPhong->setAttribute('ghi_chu_van_hanh', $ghiChuVanHanh);
+        $datPhong->setAttribute('can_xac_nhan', $canXacNhan);
+        $datPhong->setAttribute('nhan_phong_hom_nay', $nhanPhongHomNay);
+        $datPhong->setAttribute('sap_tra_phong', $sapTraPhong);
+        $datPhong->setAttribute('qua_han_tra_phong', $quaHanTraPhong);
+
+        return $datPhong;
+    }
+
+    private function tongHopDatPhong(Collection $danhSachDatPhong): array
+    {
+        return [
+            'tong_don' => $danhSachDatPhong->count(),
+            'tong_doanh_thu_tam_tinh' => (float) $danhSachDatPhong->sum('tong_tien_tam_tinh'),
+            'cho_xac_nhan' => $danhSachDatPhong->where('trang_thai', 'cho_xac_nhan')->count(),
+            'da_xac_nhan' => $danhSachDatPhong->where('trang_thai', 'da_xac_nhan')->count(),
+            'dang_luu_tru' => $danhSachDatPhong->where('trang_thai', 'da_nhan_phong')->count(),
+            'da_tra_phong' => $danhSachDatPhong->where('trang_thai', 'da_tra_phong')->count(),
+            'website' => $danhSachDatPhong->where('nguon_dat', 'website')->count(),
+            'co_hoa_don' => $danhSachDatPhong->filter(fn(DatPhong $datPhong) => (bool) $datPhong->hoa_don_hien_tai)->count(),
+            'can_xu_ly_ngay' => $danhSachDatPhong->where('can_xu_ly_ngay', true)->count(),
+            'nhan_phong_hom_nay' => $danhSachDatPhong->where('nhan_phong_hom_nay', true)->count(),
+            'sap_tra_phong' => $danhSachDatPhong->where('sap_tra_phong', true)->count(),
+        ];
+    }
+
+    private function taoTimelineDatPhong(DatPhong $datPhong, ?HoaDon $hoaDonHienTai): array
+    {
+        $timeline = [
+            [
+                'label' => 'Tạo đơn đặt phòng',
+                'thoi_gian' => $datPhong->ngay_dat,
+                'ghi_chu' => 'Đơn được tạo và ghi nhận trên hệ thống.',
+                'class' => 'chip chip-info',
+                'co_gio' => true,
+            ],
+            [
+                'label' => 'Nhận phòng',
+                'thoi_gian' => $datPhong->ngay_nhan_phong_thuc_te ?? $datPhong->ngay_nhan_phong_du_kien,
+                'ghi_chu' => $datPhong->ngay_nhan_phong_thuc_te
+                    ? 'Đã nhận phòng thực tế.'
+                    : 'Lịch nhận phòng dự kiến.',
+                'class' => $datPhong->ngay_nhan_phong_thuc_te ? 'chip chip-success' : 'chip chip-warning',
+                'co_gio' => (bool) $datPhong->ngay_nhan_phong_thuc_te,
+            ],
+            [
+                'label' => 'Trả phòng',
+                'thoi_gian' => $datPhong->ngay_tra_phong_thuc_te ?? $datPhong->ngay_tra_phong_du_kien,
+                'ghi_chu' => $datPhong->ngay_tra_phong_thuc_te
+                    ? 'Khách đã hoàn tất trả phòng.'
+                    : 'Mốc trả phòng dự kiến.',
+                'class' => $datPhong->ngay_tra_phong_thuc_te ? 'chip chip-success' : 'chip chip-neutral',
+                'co_gio' => (bool) $datPhong->ngay_tra_phong_thuc_te,
+            ],
+        ];
+
+        if ($hoaDonHienTai) {
+            $timeline[] = [
+                'label' => 'Hóa đơn liên quan',
+                'thoi_gian' => $hoaDonHienTai->thoi_diem_xuat,
+                'ghi_chu' => 'Đã phát sinh hóa đơn ' . $hoaDonHienTai->ma_hoa_don . '.',
+                'class' => 'chip chip-info',
+                'co_gio' => true,
+            ];
+        }
+
+        return $timeline;
     }
 
     private function mapTrangThaiChiTiet(string $trangThaiDatPhong): ?string
