@@ -10,6 +10,31 @@ class KhachHang extends Model
 {
     use HasFactory;
 
+    public const HANG_KHACH_HANG = [
+        'thuong' => 'Thường',
+        'bac' => 'Bạc',
+        'vang' => 'Vàng',
+        'kim_cuong' => 'Kim cương',
+    ];
+
+    public const TRANG_THAI = [
+        'hoat_dong' => 'Hoạt động',
+        'tam_khoa' => 'Tạm khóa',
+    ];
+
+    public const GIOI_TINH = [
+        'nam' => 'Nam',
+        'nu' => 'Nữ',
+        'khac' => 'Khác',
+    ];
+
+    public const LOAI_GIAY_TO = [
+        'cccd' => 'CCCD',
+        'cmnd' => 'CMND',
+        'passport' => 'Passport',
+        'khac' => 'Khác',
+    ];
+
     protected $table = 'khach_hang';
 
     protected $fillable = [
@@ -39,5 +64,60 @@ class KhachHang extends Model
     public function datPhong(): HasMany
     {
         return $this->hasMany(DatPhong::class, 'khach_hang_id');
+    }
+
+    public function getAvatarUrlAttribute(): ?string
+    {
+        if (!$this->anh_dai_dien) {
+            return null;
+        }
+
+        return asset($this->anh_dai_dien);
+    }
+
+    public function getTenVietTatAttribute(): string
+    {
+        $tu = preg_split('/\s+/u', trim((string) $this->ho_ten)) ?: [];
+        $chuDau = collect($tu)
+            ->filter()
+            ->take(2)
+            ->map(function (string $giaTri) {
+                return mb_strtoupper(mb_substr($giaTri, 0, 1));
+            })
+            ->implode('');
+
+        return $chuDau !== '' ? $chuDau : 'KH';
+    }
+
+    public static function timTheoThongTinLienHe(?string $email, ?string $soDienThoai): ?self
+    {
+        $email = trim((string) $email);
+        $soDienThoai = trim((string) $soDienThoai);
+
+        if ($email === '' && $soDienThoai === '') {
+            return null;
+        }
+
+        return static::query()
+            ->where(function ($query) use ($email, $soDienThoai) {
+                if ($email !== '') {
+                    $query->where('email', $email);
+                }
+
+                if ($soDienThoai !== '') {
+                    $phuongThuc = $email !== '' ? 'orWhere' : 'where';
+                    $query->{$phuongThuc}('so_dien_thoai', $soDienThoai);
+                }
+            })
+            ->first();
+    }
+
+    public static function taoMaMoi(): string
+    {
+        do {
+            $maKhachHang = 'KH' . now()->format('ymdHis') . random_int(10, 99);
+        } while (static::query()->where('ma_khach_hang', $maKhachHang)->exists());
+
+        return $maKhachHang;
     }
 }
