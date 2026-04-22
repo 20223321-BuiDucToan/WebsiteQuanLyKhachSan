@@ -213,15 +213,15 @@
     <main class="page-wrap">
         <div class="app-container page-content">
             @if(session('success'))
-                <div class="alert alert-success">{{ session('success') }}</div>
+                <div class="alert alert-success js-auto-dismiss-alert" data-auto-dismiss="5000">{{ session('success') }}</div>
             @endif
 
             @if(session('error'))
-                <div class="alert alert-danger">{{ session('error') }}</div>
+                <div class="alert alert-danger js-auto-dismiss-alert" data-auto-dismiss="5000">{{ session('error') }}</div>
             @endif
 
             @if($errors->any())
-                <div class="alert alert-danger">
+                <div class="alert alert-danger js-auto-dismiss-alert" data-auto-dismiss="5000">
                     <ul class="mb-0 ps-3">
                         @foreach($errors->all() as $error)
                             <li>{{ $error }}</li>
@@ -235,6 +235,7 @@
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    @include('partials.auto-dismiss-alerts')
     @stack('scripts')
 </body>
 </html>

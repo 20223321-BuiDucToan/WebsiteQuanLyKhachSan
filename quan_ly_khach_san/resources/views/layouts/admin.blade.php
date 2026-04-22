@@ -670,21 +670,21 @@
             <section class="page-wrap">
                 <div class="page-content">
                     @if(session('success'))
-                        <div class="alert alert-success d-flex align-items-center gap-2">
+                        <div class="alert alert-success d-flex align-items-center gap-2 js-auto-dismiss-alert" data-auto-dismiss="5000">
                             <i class="fa-solid fa-circle-check"></i>
                             <span>{{ session('success') }}</span>
                         </div>
                     @endif
 
                     @if(session('error'))
-                        <div class="alert alert-danger d-flex align-items-center gap-2">
+                        <div class="alert alert-danger d-flex align-items-center gap-2 js-auto-dismiss-alert" data-auto-dismiss="5000">
                             <i class="fa-solid fa-triangle-exclamation"></i>
                             <span>{{ session('error') }}</span>
                         </div>
                     @endif
 
                     @if($errors->any())
-                        <div class="alert alert-danger">
+                        <div class="alert alert-danger js-auto-dismiss-alert" data-auto-dismiss="5000">
                             <div class="fw-semibold mb-2">Có lỗi dữ liệu cần kiểm tra:</div>
                             <ul class="mb-0 ps-3">
                                 @foreach($errors->all() as $error)
@@ -733,6 +733,7 @@
             }
         });
     </script>
+    @include('partials.auto-dismiss-alerts')
     @stack('scripts')
     @yield('scripts')
 </body>

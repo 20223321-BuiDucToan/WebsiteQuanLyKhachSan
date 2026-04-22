@@ -808,15 +808,15 @@
         </section>
 
         @if(session('success'))
-            <div class="alert alert-success">{{ session('success') }}</div>
+            <div class="alert alert-success js-auto-dismiss-alert" data-auto-dismiss="5000">{{ session('success') }}</div>
         @endif
 
         @if(session('error'))
-            <div class="alert alert-danger">{{ session('error') }}</div>
+            <div class="alert alert-danger js-auto-dismiss-alert" data-auto-dismiss="5000">{{ session('error') }}</div>
         @endif
 
         @if($errors->any())
-            <div class="alert alert-danger">
+            <div class="alert alert-danger js-auto-dismiss-alert" data-auto-dismiss="5000">
                 <div class="fw-semibold mb-1">Vui lòng kiểm tra lại thông tin:</div>
                 <ul class="mb-0 ps-3">
                     @foreach($errors->all() as $error)
@@ -1186,6 +1186,7 @@
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    @include('partials.auto-dismiss-alerts')
     <script>
         const roomCards = Array.from(document.querySelectorAll('.room-card[data-room-id]'));
         const roomButtons = Array.from(document.querySelectorAll('.js-choose-room'));

@@ -266,11 +266,11 @@
                                     </div>
 
                                     @if(session('success'))
-                                        <div class="alert alert-success">{{ session('success') }}</div>
+                                        <div class="alert alert-success js-auto-dismiss-alert" data-auto-dismiss="5000">{{ session('success') }}</div>
                                     @endif
 
                                     @if($errors->any())
-                                        <div class="alert alert-danger">
+                                        <div class="alert alert-danger js-auto-dismiss-alert" data-auto-dismiss="5000">
                                             <ul class="mb-0 ps-3">
                                                 @foreach($errors->all() as $error)
                                                     <li>{{ $error }}</li>
@@ -289,6 +289,7 @@
         </div>
     </div>
 
+    @include('partials.auto-dismiss-alerts')
     @stack('scripts')
 </body>
 </html>

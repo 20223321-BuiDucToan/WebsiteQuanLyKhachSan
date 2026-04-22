@@ -39,7 +39,7 @@
         </button>
 
         @if(session('reset_link'))
-            <div class="alert alert-info">
+            <div class="alert alert-info js-auto-dismiss-alert" data-auto-dismiss="5000">
                 Xác thực thành công <br>
                 <a href="{{ session('reset_link') }}" class="auth-link">Mở liên kết để đặt lại mật khẩu của bạn !</a>
             </div>
