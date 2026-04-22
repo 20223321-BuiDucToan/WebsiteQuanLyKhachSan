@@ -10,6 +10,9 @@ class LoaiPhong extends Model
 {
     use HasFactory;
 
+    public const TRANG_THAI_HOAT_DONG = 'hoat_dong';
+    public const TRANG_THAI_TAM_NGUNG = 'tam_ngung';
+
     protected $table = 'loai_phong';
 
     protected $fillable = [
@@ -42,5 +45,14 @@ class LoaiPhong extends Model
     public function phong(): HasMany
     {
         return $this->hasMany(Phong::class, 'loai_phong_id');
+    }
+
+    public static function taoMaMoi(): string
+    {
+        do {
+            $maLoaiPhong = 'LP' . now()->format('ymdHis') . random_int(10, 99);
+        } while (static::query()->where('ma_loai_phong', $maLoaiPhong)->exists());
+
+        return $maLoaiPhong;
     }
 }

@@ -6,7 +6,10 @@ use App\Models\LoaiPhong;
 use App\Models\Phong;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class PhongController extends Controller
 {
@@ -90,12 +93,20 @@ class PhongController extends Controller
     {
         $duLieu = $this->validateDuLieuPhong($request);
         $duLieu['ma_phong'] = $this->taoMaPhong($duLieu['so_phong']);
+        $duLieu['trang_thai'] = Phong::TRANG_THAI_TRONG;
 
-        Phong::query()->create($duLieu);
+        $phong = Phong::query()->create($duLieu);
+        $duLieuAnhPhong = $this->xuLyAnhPhong($request, $phong);
+
+        if ($duLieuAnhPhong !== []) {
+            $phong->update($duLieuAnhPhong);
+        }
+
+        $phong->refresh()->dongBoTrangThaiHeThong();
 
         return redirect()
             ->route('phong.index')
-            ->with('success', 'Them phong thanh cong.');
+            ->with('success', 'Thêm phòng thành công.');
     }
 
     public function edit(Phong $phong)
@@ -115,28 +126,40 @@ class PhongController extends Controller
     public function update(Request $request, Phong $phong)
     {
         $duLieu = $this->validateDuLieuPhong($request, $phong->id);
-        $duLieu['ma_phong'] = $this->taoMaPhong($duLieu['so_phong'], $phong->id);
 
-        $phong->update($duLieu);
+        if (($duLieu['tinh_trang_hoat_dong'] ?? null) === 'tam_ngung' && $phong->coDatPhongHoatDong()) {
+            throw ValidationException::withMessages(['tinh_trang_hoat_dong' => 'Không thể chuyển phòng sang tạm ngưng khi phòng đang có đặt phòng hiệu lực.',
+                'tinh_trang_hoat_dong' => 'Không thể chuyển phòng sang tạm ngưng khi phòng đang có đặt phòng hiệu lực.',
+            ]);
+        }
+
+        $duLieu['ma_phong'] = $this->taoMaPhong($duLieu['so_phong'], $phong->id);
+        $duLieuAnhPhong = $this->xuLyAnhPhong($request, $phong);
+
+        $phong->update(array_merge($duLieu, $duLieuAnhPhong));
+
+        $phong->refresh()->dongBoTrangThaiHeThong();
 
         return redirect()
             ->route('phong.index')
-            ->with('success', 'Cap nhat phong thanh cong.');
+            ->with('success', 'Cập nhật phòng thành công.');
     }
 
     public function destroy(Phong $phong)
     {
         try {
+            $danhSachAnhPhong = $phong->layDanhSachAnhPhong();
             $phong->delete();
+            $this->xoaNhieuAnhPhong($danhSachAnhPhong);
         } catch (QueryException $exception) {
             return redirect()
                 ->route('phong.index')
-                ->with('error', 'Khong the xoa phong da phat sinh dat phong.');
+                ->with('error', 'Không thể xóa phòng đã phát sinh đặt phòng.');
         }
 
         return redirect()
             ->route('phong.index')
-            ->with('success', 'Xoa phong thanh cong.');
+            ->with('success', 'Xóa phòng thành công.');
     }
 
     private function validateDuLieuPhong(Request $request, ?int $phongId = null): array
@@ -150,12 +173,83 @@ class PhongController extends Controller
             ],
             'loai_phong_id' => ['required', 'integer', 'exists:loai_phong,id'],
             'tang' => ['nullable', 'integer', 'min:0', 'max:100'],
-            'trang_thai' => ['required', Rule::in(['trong', 'da_dat', 'dang_su_dung', 'bao_tri', 'don_dep'])],
             'tinh_trang_ve_sinh' => ['required', Rule::in(['sach', 'can_don', 'dang_don', 'ban'])],
             'tinh_trang_hoat_dong' => ['required', Rule::in(['hoat_dong', 'tam_ngung'])],
             'gia_mac_dinh' => ['nullable', 'numeric', 'min:0'],
             'ghi_chu' => ['nullable', 'string', 'max:1000'],
+            'anh_phong' => ['nullable', 'array'],
+            'anh_phong.*' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
+            'xoa_anh_phong' => ['nullable', 'array'],
+            'xoa_anh_phong.*' => ['nullable', 'string', 'max:255'],
+        ], [
+            'anh_phong.*.image' => 'Mỗi tệp tải lên phải là hình ảnh hợp lệ.',
+            'anh_phong.*.mimes' => 'Ảnh phòng chỉ hỗ trợ định dạng JPG, JPEG, PNG hoặc WEBP.',
+            'anh_phong.*.max' => 'Mỗi ảnh phòng chỉ được tối đa 4MB.',
         ]);
+    }
+
+    private function xuLyAnhPhong(Request $request, ?Phong $phong = null): array
+    {
+        $danhSachAnhPhong = $phong?->layDanhSachAnhPhong() ?? [];
+        $anhCanXoa = array_values(array_filter(
+            (array) $request->input('xoa_anh_phong', []),
+            fn ($duongDan) => is_string($duongDan) && in_array($duongDan, $danhSachAnhPhong, true)
+        ));
+
+        if ($anhCanXoa !== []) {
+            $this->xoaNhieuAnhPhong($anhCanXoa);
+            $danhSachAnhPhong = array_values(array_diff($danhSachAnhPhong, $anhCanXoa));
+        }
+
+        if (!$request->hasFile('anh_phong')) {
+            return $anhCanXoa !== [] ? ['anh_phong' => $danhSachAnhPhong] : [];
+        }
+
+        $thuMuc = public_path('uploads/phong');
+
+        if (!File::isDirectory($thuMuc)) {
+            File::makeDirectory($thuMuc, 0755, true);
+        }
+
+        foreach ((array) $request->file('anh_phong', []) as $tepAnh) {
+            if (!$tepAnh) {
+                continue;
+            }
+
+            $tenTep = 'phong-'
+                . Str::slug((string) ($request->input('so_phong') ?: $phong?->so_phong ?: 'hotel-room'))
+                . '-'
+                . now()->format('YmdHis')
+                . '-'
+                . Str::lower(Str::random(8))
+                . '.'
+                . $tepAnh->getClientOriginalExtension();
+
+            $tepAnh->move($thuMuc, $tenTep);
+            $danhSachAnhPhong[] = 'uploads/phong/' . $tenTep;
+        }
+
+        return ['anh_phong' => $danhSachAnhPhong];
+    }
+
+    private function xoaNhieuAnhPhong(array $danhSachAnhPhong): void
+    {
+        foreach ($danhSachAnhPhong as $duongDanAnh) {
+            $this->xoaAnhPhong($duongDanAnh);
+        }
+    }
+
+    private function xoaAnhPhong(?string $duongDanAnh): void
+    {
+        if (!$duongDanAnh) {
+            return;
+        }
+
+        $duongDanDayDu = public_path($duongDanAnh);
+
+        if (File::exists($duongDanDayDu)) {
+            File::delete($duongDanDayDu);
+        }
     }
 
     private function taoMaPhong(string $soPhong, ?int $phongId = null): string
@@ -168,7 +262,7 @@ class PhongController extends Controller
         while (
             Phong::query()
                 ->where('ma_phong', $maPhong)
-                ->when($phongId, fn($query) => $query->where('id', '!=', $phongId))
+                ->when($phongId, fn ($query) => $query->where('id', '!=', $phongId))
                 ->exists()
         ) {
             $maPhong = $baseCode . $soThuTu;

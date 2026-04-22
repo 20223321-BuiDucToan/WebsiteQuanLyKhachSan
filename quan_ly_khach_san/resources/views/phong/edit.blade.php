@@ -10,7 +10,7 @@
 
     <div class="premium-card">
         <div class="card-body p-4">
-            <form action="{{ route('phong.update', $phong) }}" method="POST">
+            <form action="{{ route('phong.update', $phong) }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 @method('PUT')
 

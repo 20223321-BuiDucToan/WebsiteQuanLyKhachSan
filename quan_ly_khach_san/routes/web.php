@@ -6,16 +6,26 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\DatPhongController;
 use App\Http\Controllers\NguoiDungController;
 use App\Http\Controllers\PhongController;
+use App\Http\Controllers\LoaiPhongController;
 use App\Http\Controllers\KhachHangController;
 use App\Http\Controllers\ThanhToanController;
 use App\Http\Controllers\HoaDonController;
 use App\Http\Controllers\BaoCaoThongKeController;
 use App\Http\Controllers\PublicBookingController;
+use App\Http\Controllers\DichVuController;
+use App\Http\Controllers\SuDungDichVuController;
 
 Route::get('/', [PublicBookingController::class, 'index'])->name('booking.index');
 Route::post('/dat-phong', [PublicBookingController::class, 'store'])
     ->middleware(['auth', 'kiem_tra_tai_khoan_hoat_dong', 'kiem_tra_vai_tro:khach_hang'])
     ->name('booking.store');
+
+Route::middleware(['auth', 'kiem_tra_tai_khoan_hoat_dong', 'kiem_tra_vai_tro:khach_hang'])->group(function () {
+    Route::get('/tai-khoan', [PublicBookingController::class, 'showTaiKhoan'])->name('booking.account');
+    Route::patch('/tai-khoan/thong-tin', [PublicBookingController::class, 'updateTaiKhoan'])->name('booking.account.update');
+    Route::get('/tai-khoan/hoa-don/{hoaDon}', [PublicBookingController::class, 'showHoaDon'])->name('booking.hoa-don.show');
+    Route::post('/tai-khoan/hoa-don/{hoaDon}/thanh-toan', [ThanhToanController::class, 'storeYeuCauKhachHang'])->name('booking.thanh-toan.store');
+});
 
 Route::middleware('guest')->group(function () {
     Route::get('/dang-nhap', [AuthController::class, 'showLoginForm'])->name('login');
@@ -29,7 +39,7 @@ Route::middleware('guest')->group(function () {
     Route::post('/dat-lai-mat-khau', [AuthController::class, 'resetPassword'])->name('password.update');
 });
 
-Route::post('/dang-xuat', [AuthController::class, 'logout'])
+Route::match(['get', 'post'], '/dang-xuat', [AuthController::class, 'logout'])
     ->middleware('auth')
     ->name('logout');
 
@@ -41,6 +51,9 @@ Route::middleware(['auth', 'kiem_tra_tai_khoan_hoat_dong', 'kiem_tra_vai_tro:adm
         Route::get('/tao-moi', [DatPhongController::class, 'create'])->name('create');
         Route::post('/', [DatPhongController::class, 'store'])->name('store');
         Route::patch('/{datPhong}/trang-thai', [DatPhongController::class, 'capNhatTrangThai'])->name('cap-nhat-trang-thai');
+        Route::post('/{datPhong}/dich-vu', [SuDungDichVuController::class, 'store'])->name('dich-vu.store');
+        Route::patch('/{datPhong}/dich-vu/{suDungDichVu}', [SuDungDichVuController::class, 'update'])->name('dich-vu.update');
+        Route::delete('/{datPhong}/dich-vu/{suDungDichVu}', [SuDungDichVuController::class, 'destroy'])->name('dich-vu.destroy');
         Route::get('/{datPhong}', [DatPhongController::class, 'show'])->name('show');
     });
 
@@ -53,6 +66,7 @@ Route::middleware(['auth', 'kiem_tra_tai_khoan_hoat_dong', 'kiem_tra_vai_tro:adm
     Route::prefix('/quan-ly-thanh-toan')->name('thanh-toan.')->group(function () {
         Route::get('/', [ThanhToanController::class, 'index'])->name('index');
         Route::post('/', [ThanhToanController::class, 'store'])->name('store');
+        Route::patch('/{thanhToan}/trang-thai', [ThanhToanController::class, 'capNhatTrangThai'])->name('cap-nhat-trang-thai');
     });
 
     Route::prefix('/quan-ly-hoa-don')->name('hoa-don.')->group(function () {
@@ -69,6 +83,8 @@ Route::middleware(['auth', 'kiem_tra_tai_khoan_hoat_dong', 'kiem_tra_vai_tro:adm
     Route::patch('/nguoi-dung/{id}/doi-trang-thai', [NguoiDungController::class, 'doiTrangThai'])
         ->name('nguoi-dung.doi-trang-thai');
 
+    Route::resource('loai-phong', LoaiPhongController::class)->except(['show']);
     Route::resource('phong', PhongController::class)->except(['show']);
+    Route::resource('dich-vu', DichVuController::class)->except(['show']);
     Route::get('/bao-cao-thong-ke', [BaoCaoThongKeController::class, 'index'])->name('bao-cao.index');
 });

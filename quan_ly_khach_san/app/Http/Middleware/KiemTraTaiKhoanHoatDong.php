@@ -14,7 +14,6 @@ class KiemTraTaiKhoanHoatDong
 
         if ($nguoiDung && $nguoiDung->trang_thai !== 'hoat_dong') {
             auth()->logout();
-
             return redirect()->route('login')->with('error', 'Tài khoản của bạn đã bị tạm khóa.');
         }
 

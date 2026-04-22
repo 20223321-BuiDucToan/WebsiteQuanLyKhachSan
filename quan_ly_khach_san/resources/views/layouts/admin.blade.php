@@ -28,6 +28,8 @@
             --sidebar-1: #0f2944;
             --sidebar-2: #1a3e61;
             --shadow-soft: 0 18px 42px rgba(15, 41, 68, 0.1);
+            --sidebar-width: 272px;
+            --content-max: 1680px;
         }
 
         * {
@@ -57,7 +59,7 @@
             top: 0;
             left: 0;
             bottom: 0;
-            width: 290px;
+            width: var(--sidebar-width);
             overflow-y: auto;
             background: linear-gradient(160deg, var(--sidebar-1), var(--sidebar-2));
             color: #dbe9f7;
@@ -152,6 +154,21 @@
             box-shadow: 0 12px 24px rgba(13, 148, 136, 0.28);
         }
 
+        .menu-badge {
+            margin-left: auto;
+            min-width: 24px;
+            height: 24px;
+            padding: 0 8px;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.18);
+            color: #fff;
+            font-size: 0.72rem;
+            font-weight: 800;
+        }
+
         .sidebar-note {
             margin-top: 16px;
             color: #c0d5eb;
@@ -162,7 +179,7 @@
         }
 
         .app-main {
-            margin-left: 290px;
+            margin-left: var(--sidebar-width);
             min-height: 100vh;
         }
 
@@ -173,7 +190,8 @@
             background: rgba(255, 255, 255, 0.88);
             backdrop-filter: blur(8px);
             border-bottom: 1px solid var(--line);
-            padding: 14px 24px;
+            box-shadow: 0 10px 24px rgba(15, 41, 68, 0.06);
+            padding: 16px clamp(18px, 2vw, 30px);
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -192,6 +210,24 @@
             font-size: 0.85rem;
         }
 
+        .topbar-alert-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 14px;
+            border-radius: 999px;
+            border: 1px solid #fed7aa;
+            background: #fff7ed;
+            color: #9a3412;
+            font-size: 0.84rem;
+            font-weight: 700;
+        }
+
+        .topbar-alert-link:hover {
+            color: #7c2d12;
+            background: #ffedd5;
+        }
+
         .btn-menu {
             border: 1px solid var(--line);
             background: #fff;
@@ -204,34 +240,53 @@
         }
 
         .page-wrap {
-            padding: 24px;
+            padding: 28px clamp(18px, 2.4vw, 34px) 44px;
+        }
+
+        .page-content {
+            width: min(var(--content-max), 100%);
+            margin: 0 auto;
+            display: grid;
+            gap: 24px;
+        }
+
+        .page-content > .row {
+            --bs-gutter-x: 1.4rem;
+            --bs-gutter-y: 1.4rem;
         }
 
         .section-title {
             font-family: 'Playfair Display', serif;
-            font-size: clamp(1.75rem, 2vw, 2.25rem);
+            font-size: clamp(1.95rem, 2.4vw, 2.55rem);
             margin: 0;
             color: var(--ink-900);
+            letter-spacing: -0.02em;
         }
 
         .section-subtitle {
             margin: 6px 0 0;
             color: var(--ink-500);
+            max-width: 72ch;
+            line-height: 1.7;
         }
 
         .premium-card {
             border: 1px solid var(--line);
-            border-radius: 22px;
+            border-radius: 24px;
             background: var(--bg-card);
             box-shadow: var(--shadow-soft);
             overflow: hidden;
+        }
+
+        .premium-card .card-body {
+            padding: clamp(20px, 1.4vw, 30px);
         }
 
         .metric-card {
             border: 1px solid var(--line);
             border-radius: 18px;
             background: #fff;
-            padding: 16px;
+            padding: 20px;
             height: 100%;
         }
 
@@ -252,7 +307,7 @@
         .btn-premium {
             border: none;
             border-radius: 12px;
-            padding: 10px 16px;
+            padding: 11px 16px;
             font-weight: 700;
             color: #fff;
             background: linear-gradient(135deg, var(--brand), #0d9488);
@@ -267,7 +322,7 @@
         .btn-soft {
             border: 1px solid var(--line);
             border-radius: 12px;
-            padding: 9px 14px;
+            padding: 10px 14px;
             background: #fff;
             color: var(--ink-700);
             font-weight: 600;
@@ -288,13 +343,26 @@
         .form-select {
             border-color: #cddaea;
             border-radius: 12px;
-            min-height: 44px;
+            min-height: 48px;
+            padding: 0.75rem 0.95rem;
         }
 
         .form-control:focus,
         .form-select:focus {
             border-color: #63b5ab;
             box-shadow: 0 0 0 0.2rem rgba(15, 118, 110, 0.14);
+        }
+
+        textarea.form-control {
+            min-height: 120px;
+        }
+
+        .table-responsive {
+            width: 100%;
+            overflow: auto;
+            border: 1px solid #e2eaf3;
+            border-radius: 18px;
+            background: #fff;
         }
 
         .table {
@@ -308,12 +376,12 @@
             font-size: 0.85rem;
             font-weight: 700;
             white-space: nowrap;
-            padding: 12px;
+            padding: 14px 16px;
         }
 
         .table tbody td {
             border-bottom: 1px solid #edf2f8;
-            padding: 12px;
+            padding: 14px 16px;
             vertical-align: middle;
         }
 
@@ -379,6 +447,11 @@
             border: 1px solid transparent;
         }
 
+        .page-content .table-responsive + .mt-3,
+        .page-content .table-responsive + .d-flex {
+            margin-top: 16px !important;
+        }
+
         .pagination {
             margin-bottom: 0;
             gap: 6px;
@@ -423,6 +496,10 @@
             .app-main {
                 margin-left: 268px;
             }
+
+            .page-content {
+                gap: 20px;
+            }
         }
 
         @media (max-width: 991px) {
@@ -450,6 +527,15 @@
             .page-wrap {
                 padding: 16px;
             }
+
+            .page-content {
+                gap: 16px;
+            }
+
+            .page-content > .row {
+                --bs-gutter-x: 1rem;
+                --bs-gutter-y: 1rem;
+            }
         }
     </style>
 
@@ -459,6 +545,7 @@
     @php
         $nguoiDungDangNhap = auth()->user();
         $vaiTro = $nguoiDungDangNhap->vai_tro;
+        $tongYeuCauThanhToanChoXuLy = (int) ($canhBaoThanhToanNoiBo['cho_xu_ly_khach_hang'] ?? 0);
         $tenVaiTro = match ($vaiTro) {
             'admin' => 'Quản trị viên',
             'nhan_vien' => 'Nhân viên',
@@ -472,8 +559,8 @@
 
         <aside class="app-sidebar">
             <div class="sidebar-brand">
-                <h1><i class="fa-solid fa-hotel me-2"></i>Azure Bay Hotel</h1>
-                <p>Nền tảng quản lý khách sạn tập trung</p>
+                <h1><i class="fa-solid fa-hotel me-2"></i>Quản lý khách sạn - Nhóm 6</h1>
+                <p></p>
             </div>
 
             <div class="role-card">
@@ -498,6 +585,14 @@
                         <i class="fa-solid fa-bed"></i>
                         <span>Quản lý phòng</span>
                     </a>
+                    <a href="{{ route('loai-phong.index') }}" class="menu-link {{ request()->routeIs('loai-phong.*') ? 'active' : '' }}">
+                        <i class="fa-solid fa-layer-group"></i>
+                        <span>Quản lý loại phòng</span>
+                    </a>
+                    <a href="{{ route('dich-vu.index') }}" class="menu-link {{ request()->routeIs('dich-vu.*') ? 'active' : '' }}">
+                        <i class="fa-solid fa-bell-concierge"></i>
+                        <span>Quản lý dịch vụ</span>
+                    </a>
                     <a href="{{ route('bao-cao.index') }}" class="menu-link {{ request()->routeIs('bao-cao.*') ? 'active' : '' }}">
                         <i class="fa-solid fa-chart-line"></i>
                         <span>Báo cáo thống kê</span>
@@ -521,6 +616,9 @@
                     <a href="{{ route('thanh-toan.index') }}" class="menu-link {{ request()->routeIs('thanh-toan.*') ? 'active' : '' }}">
                         <i class="fa-solid fa-credit-card"></i>
                         <span>Quản lý thanh toán</span>
+                        @if($tongYeuCauThanhToanChoXuLy > 0)
+                            <span class="menu-badge">{{ $tongYeuCauThanhToanChoXuLy }}</span>
+                        @endif
                     </a>
                 @endif
             </div>
@@ -544,6 +642,16 @@
                 </div>
 
                 <div class="d-flex align-items-center gap-2 flex-wrap justify-content-end">
+                    @if($tongYeuCauThanhToanChoXuLy > 0)
+                        <a
+                            href="{{ route('thanh-toan.index', ['trang_thai' => 'cho_xu_ly', 'nguon_tao' => 'khach_hang']) }}"
+                            class="topbar-alert-link"
+                        >
+                            <i class="fa-solid fa-receipt"></i>
+                            <span>{{ $tongYeuCauThanhToanChoXuLy }} yêu cầu thanh toán khách chờ duyệt</span>
+                        </a>
+                    @endif
+
                     @if($vaiTro === 'admin')
                         <span class="badge-role-admin">ADMIN</span>
                     @elseif($vaiTro === 'nhan_vien')
@@ -552,43 +660,42 @@
                         <span class="badge-role-khach-hang">KHÁCH HÀNG</span>
                     @endif
 
-                    <form action="{{ route('logout') }}" method="POST" class="mb-0">
-                        @csrf
-                        <button type="submit" class="btn btn-soft btn-sm">
-                            <i class="fa-solid fa-right-from-bracket me-1"></i>
-                            Đăng xuất
-                        </button>
-                    </form>
+                    <a href="{{ route('logout') }}" class="btn btn-soft btn-sm">
+                        <i class="fa-solid fa-right-from-bracket me-1"></i>
+                        Đăng xuất
+                    </a>
                 </div>
             </header>
 
             <section class="page-wrap">
-                @if(session('success'))
-                    <div class="alert alert-success d-flex align-items-center gap-2">
-                        <i class="fa-solid fa-circle-check"></i>
-                        <span>{{ session('success') }}</span>
-                    </div>
-                @endif
+                <div class="page-content">
+                    @if(session('success'))
+                        <div class="alert alert-success d-flex align-items-center gap-2">
+                            <i class="fa-solid fa-circle-check"></i>
+                            <span>{{ session('success') }}</span>
+                        </div>
+                    @endif
 
-                @if(session('error'))
-                    <div class="alert alert-danger d-flex align-items-center gap-2">
-                        <i class="fa-solid fa-triangle-exclamation"></i>
-                        <span>{{ session('error') }}</span>
-                    </div>
-                @endif
+                    @if(session('error'))
+                        <div class="alert alert-danger d-flex align-items-center gap-2">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                            <span>{{ session('error') }}</span>
+                        </div>
+                    @endif
 
-                @if($errors->any())
-                    <div class="alert alert-danger">
-                        <div class="fw-semibold mb-2">Có lỗi dữ liệu cần kiểm tra:</div>
-                        <ul class="mb-0 ps-3">
-                            @foreach($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
-                @endif
+                    @if($errors->any())
+                        <div class="alert alert-danger">
+                            <div class="fw-semibold mb-2">Có lỗi dữ liệu cần kiểm tra:</div>
+                            <ul class="mb-0 ps-3">
+                                @foreach($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
 
-                @yield('content')
+                    @yield('content')
+                </div>
             </section>
         </main>
     </div>

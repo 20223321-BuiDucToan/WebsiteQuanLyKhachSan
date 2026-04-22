@@ -8,7 +8,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ThanhToan extends Model
 {
-    use HasFactory;
+    use HasFactory;     
+
+    public const NGUON_TAO_NOI_BO = 'noi_bo';
+    public const NGUON_TAO_KHACH_HANG = 'khach_hang';
 
     protected $table = 'thanh_toan';
 
@@ -17,9 +20,13 @@ class ThanhToan extends Model
         'hoa_don_id',
         'so_tien',
         'phuong_thuc_thanh_toan',
+        'ma_tham_chieu',
         'thoi_diem_thanh_toan',
         'trang_thai',
+        'nguon_tao',
         'nguoi_tao_id',
+        'nguoi_xu_ly_id',
+        'thoi_diem_xu_ly',
         'ghi_chu',
     ];
 
@@ -28,6 +35,7 @@ class ThanhToan extends Model
         return [
             'so_tien' => 'decimal:2',
             'thoi_diem_thanh_toan' => 'datetime',
+            'thoi_diem_xu_ly' => 'datetime',
         ];
     }
 
@@ -39,5 +47,15 @@ class ThanhToan extends Model
     public function nguoiTao(): BelongsTo
     {
         return $this->belongsTo(NguoiDung::class, 'nguoi_tao_id');
+    }
+
+    public function nguoiXuLy(): BelongsTo
+    {
+        return $this->belongsTo(NguoiDung::class, 'nguoi_xu_ly_id');
+    }
+
+    public function laYeuCauTuKhachHang(): bool
+    {
+        return $this->nguon_tao === self::NGUON_TAO_KHACH_HANG;
     }
 }

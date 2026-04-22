@@ -16,7 +16,7 @@ class HomeController extends Controller
         $nguoiDung = auth()->user();
 
         if ($nguoiDung->vai_tro === 'khach_hang') {
-            return redirect()->route('booking.index');
+            return redirect()->route('booking.account');
         }
 
         if ($nguoiDung->vai_tro === 'admin') {
@@ -31,6 +31,9 @@ class HomeController extends Controller
             $tongPhongDangSuDung = Phong::where('trang_thai', 'dang_su_dung')->count();
             $tongHoaDon = HoaDon::count();
             $tongHoaDonCanThu = HoaDon::whereIn('trang_thai', ['chua_thanh_toan', 'thanh_toan_mot_phan'])->count();
+            $tongYeuCauThanhToanChoXuLy = ThanhToan::where('trang_thai', 'cho_xu_ly')
+                ->where('nguon_tao', ThanhToan::NGUON_TAO_KHACH_HANG)
+                ->count();
             $doanhThuThangNay = (float) ThanhToan::where('trang_thai', 'thanh_cong')
                 ->whereBetween('thoi_diem_thanh_toan', [now()->startOfMonth(), now()->endOfMonth()])
                 ->sum('so_tien');
@@ -38,6 +41,13 @@ class HomeController extends Controller
 
             $nguoiDungMoi = NguoiDung::latest('id')->take(5)->get();
             $datPhongGanDay = DatPhong::with(['khachHang', 'chiTietDatPhong.phong'])->latest('id')->take(5)->get();
+            $danhSachThanhToanChoXuLy = ThanhToan::query()
+                ->with(['hoaDon.datPhong.khachHang'])
+                ->where('trang_thai', 'cho_xu_ly')
+                ->where('nguon_tao', ThanhToan::NGUON_TAO_KHACH_HANG)
+                ->latest('id')
+                ->take(5)
+                ->get();
 
             return view('dashboard.admin', compact(
                 'tongNguoiDung',
@@ -51,10 +61,12 @@ class HomeController extends Controller
                 'tongPhongDangSuDung',
                 'tongHoaDon',
                 'tongHoaDonCanThu',
+                'tongYeuCauThanhToanChoXuLy',
                 'doanhThuThangNay',
                 'tongKhachHang',
                 'nguoiDungMoi',
-                'datPhongGanDay'
+                'datPhongGanDay',
+                'danhSachThanhToanChoXuLy'
             ));
         }
 
@@ -62,6 +74,9 @@ class HomeController extends Controller
         $tongDatPhongHomNay = DatPhong::whereDate('ngay_dat', now()->toDateString())->count();
         $tongKhachHang = KhachHang::count();
         $tongHoaDonCanThu = HoaDon::whereIn('trang_thai', ['chua_thanh_toan', 'thanh_toan_mot_phan'])->count();
+        $tongYeuCauThanhToanChoXuLy = ThanhToan::where('trang_thai', 'cho_xu_ly')
+            ->where('nguon_tao', ThanhToan::NGUON_TAO_KHACH_HANG)
+            ->count();
         $tongTienThuHomNay = (float) ThanhToan::where('trang_thai', 'thanh_cong')
             ->whereDate('thoi_diem_thanh_toan', now()->toDateString())
             ->sum('so_tien');
@@ -71,6 +86,13 @@ class HomeController extends Controller
             ->latest('id')
             ->take(6)
             ->get();
+        $danhSachThanhToanChoXuLy = ThanhToan::query()
+            ->with(['hoaDon.datPhong.khachHang'])
+            ->where('trang_thai', 'cho_xu_ly')
+            ->where('nguon_tao', ThanhToan::NGUON_TAO_KHACH_HANG)
+            ->latest('id')
+            ->take(5)
+            ->get();
 
         return view('dashboard.nhan_vien', [
             'nguoiDung' => $nguoiDung,
@@ -78,8 +100,10 @@ class HomeController extends Controller
             'tongDatPhongHomNay' => $tongDatPhongHomNay,
             'tongKhachHang' => $tongKhachHang,
             'tongHoaDonCanThu' => $tongHoaDonCanThu,
+            'tongYeuCauThanhToanChoXuLy' => $tongYeuCauThanhToanChoXuLy,
             'tongTienThuHomNay' => $tongTienThuHomNay,
             'danhSachCanXuLy' => $danhSachCanXuLy,
+            'danhSachThanhToanChoXuLy' => $danhSachThanhToanChoXuLy,
         ]);
     }
 }

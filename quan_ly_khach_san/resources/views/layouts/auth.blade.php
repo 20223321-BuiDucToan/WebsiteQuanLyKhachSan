@@ -18,6 +18,8 @@
             --line: #d8e3ef;
             --brand: #0f766e;
             --brand-dark: #0a5f58;
+            --auth-shell-max: 1320px;
+            --auth-form-max: 560px;
         }
 
         * {
@@ -34,12 +36,12 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 20px;
+            padding: clamp(18px, 3vw, 36px);
         }
 
         .auth-shell {
-            width: min(1120px, 100%);
-            min-height: 690px;
+            width: min(var(--auth-shell-max), 100%);
+            min-height: 720px;
             border-radius: 28px;
             overflow: hidden;
             background: rgba(255, 255, 255, 0.08);
@@ -50,7 +52,7 @@
 
         .auth-aside {
             height: 100%;
-            padding: 44px;
+            padding: clamp(36px, 3vw, 56px);
             background: linear-gradient(145deg, rgba(15, 118, 110, 0.92), rgba(8, 92, 81, 0.86));
             color: #fff;
             position: relative;
@@ -82,7 +84,7 @@
         .aside-brand {
             font-size: 1.3rem;
             font-weight: 800;
-            margin-bottom: 40px;
+            margin-bottom: 52px;
             position: relative;
             z-index: 1;
         }
@@ -104,27 +106,35 @@
         }
 
         .aside-points {
-            margin-top: 22px;
+            margin-top: 28px;
             display: grid;
-            gap: 9px;
+            gap: 12px;
             position: relative;
             z-index: 1;
         }
 
         .aside-points span {
-            font-size: 0.95rem;
+            font-size: 0.96rem;
+            line-height: 1.7;
         }
 
         .auth-main {
             height: 100%;
             background: rgba(255, 255, 255, 0.96);
-            padding: 32px 30px;
+            padding: clamp(28px, 3vw, 48px);
+        }
+
+        .auth-main-inner {
+            width: min(var(--auth-form-max), 100%);
+            margin: 0 auto;
+            display: grid;
+            gap: 18px;
         }
 
         .auth-top {
             display: flex;
             justify-content: flex-end;
-            margin-bottom: 18px;
+            margin-bottom: 6px;
         }
 
         .btn-home {
@@ -161,9 +171,10 @@
         }
 
         .form-control {
-            min-height: 46px;
+            min-height: 50px;
             border-radius: 12px;
             border-color: #ccd9e8;
+            padding: 0.78rem 0.95rem;
         }
 
         .form-control:focus {
@@ -174,7 +185,8 @@
         .btn-auth {
             border: none;
             border-radius: 12px;
-            padding: 11px 14px;
+            min-height: 48px;
+            padding: 11px 16px;
             font-weight: 700;
             color: #fff;
             background: linear-gradient(135deg, var(--brand), #0d9488);
@@ -197,6 +209,7 @@
 
         .alert {
             border-radius: 12px;
+            margin-bottom: 0;
         }
 
         @media (max-width: 991px) {
@@ -206,6 +219,14 @@
 
             .auth-main {
                 padding: 24px 18px;
+            }
+
+            .auth-main-inner {
+                gap: 16px;
+            }
+
+            .auth-top {
+                margin-bottom: 0;
             }
         }
     </style>
@@ -221,9 +242,9 @@
                         <div class="col-lg-6 d-none d-lg-block">
                             <div class="auth-aside">
                                 <div class="aside-brand">
-                                    <i class="fa-solid fa-hotel me-2"></i>Azure Bay Hotel
+                                    <i class="fa-solid fa-hotel me-2"></i>Quản lý khách sạn - Nhóm 6
                                 </div>
-                                <div class="aside-title">Trải nghiệm lưu trú đẳng cấp từ bước đăng nhập đầu tiên</div>
+                                <div class="aside-title"></div>
                                 <div class="aside-text">
                                     Hệ thống hỗ trợ đầy đủ quy trình đặt phòng, chăm sóc khách hàng, thanh toán và theo dõi hóa đơn trên một giao diện trực quan.
                                 </div>
@@ -237,27 +258,29 @@
 
                         <div class="col-lg-6">
                             <div class="auth-main">
-                                <div class="auth-top">
-                                    <a href="{{ route('booking.index') }}" class="btn-home">
-                                        <i class="fa-solid fa-house me-1"></i>Về trang chủ
-                                    </a>
-                                </div>
-
-                                @if(session('success'))
-                                    <div class="alert alert-success">{{ session('success') }}</div>
-                                @endif
-
-                                @if($errors->any())
-                                    <div class="alert alert-danger">
-                                        <ul class="mb-0 ps-3">
-                                            @foreach($errors->all() as $error)
-                                                <li>{{ $error }}</li>
-                                            @endforeach
-                                        </ul>
+                                <div class="auth-main-inner">
+                                    <div class="auth-top">
+                                        <a href="{{ route('booking.index') }}" class="btn-home">
+                                            <i class="fa-solid fa-house me-1"></i>Về trang chủ
+                                        </a>
                                     </div>
-                                @endif
 
-                                @yield('content')
+                                    @if(session('success'))
+                                        <div class="alert alert-success">{{ session('success') }}</div>
+                                    @endif
+
+                                    @if($errors->any())
+                                        <div class="alert alert-danger">
+                                            <ul class="mb-0 ps-3">
+                                                @foreach($errors->all() as $error)
+                                                    <li>{{ $error }}</li>
+                                                @endforeach
+                                            </ul>
+                                        </div>
+                                    @endif
+
+                                    @yield('content')
+                                </div>
                             </div>
                         </div>
                     </div>

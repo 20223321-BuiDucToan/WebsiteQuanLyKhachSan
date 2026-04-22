@@ -40,8 +40,8 @@
 
         @if(session('reset_link'))
             <div class="alert alert-info">
-                Liên kết đặt lại mật khẩu (phục vụ kiểm thử):
-                <a href="{{ session('reset_link') }}" class="auth-link">Mở liên kết</a>
+                Xác thực thành công <br>
+                <a href="{{ session('reset_link') }}" class="auth-link">Mở liên kết để đặt lại mật khẩu của bạn !</a>
             </div>
         @endif
 

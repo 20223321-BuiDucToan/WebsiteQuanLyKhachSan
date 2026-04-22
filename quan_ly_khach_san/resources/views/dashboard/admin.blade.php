@@ -59,6 +59,64 @@
         </div>
     </div>
 
+    <div class="premium-card mb-4">
+        <div class="card-body p-4">
+            <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
+                <div>
+                    <h5 class="fw-bold mb-1">Thanh toán khách đang chờ duyệt</h5>
+                    <p class="text-muted small mb-0">Các yêu cầu khách hàng đã gửi thanh toán nhưng còn chờ bộ phận nội bộ xác nhận.</p>
+                </div>
+                <a
+                    href="{{ route('thanh-toan.index', ['trang_thai' => 'cho_xu_ly', 'nguon_tao' => 'khach_hang']) }}"
+                    class="btn btn-soft btn-sm"
+                >
+                    Mở hàng đợi thanh toán
+                </a>
+            </div>
+
+            <div class="row g-3 align-items-stretch">
+                <div class="col-md-4 col-xl-3">
+                    <div class="metric-card h-100">
+                        <div class="metric-label">Yêu cầu chờ duyệt</div>
+                        <div class="metric-value text-warning">{{ $tongYeuCauThanhToanChoXuLy }}</div>
+                        <div class="small text-muted mt-2">Cần duyệt hoặc từ chối để chốt công nợ.</div>
+                    </div>
+                </div>
+
+                <div class="col-md-8 col-xl-9">
+                    @if($danhSachThanhToanChoXuLy->isEmpty())
+                        <div class="alert alert-success mb-0">Hiện tại không có yêu cầu thanh toán nào từ khách hàng đang chờ xác nhận.</div>
+                    @else
+                        <div class="table-responsive">
+                            <table class="table align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>Giao dịch</th>
+                                        <th>Khách hàng</th>
+                                        <th>Hóa đơn</th>
+                                        <th>Số tiền</th>
+                                        <th>Thời điểm gửi</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($danhSachThanhToanChoXuLy as $thanhToan)
+                                        <tr>
+                                            <td class="fw-semibold">{{ $thanhToan->ma_thanh_toan }}</td>
+                                            <td>{{ $thanhToan->hoaDon?->datPhong?->khachHang?->ho_ten ?? '-' }}</td>
+                                            <td>{{ $thanhToan->hoaDon?->ma_hoa_don ?? '-' }}</td>
+                                            <td class="fw-semibold text-danger">{{ number_format((float) $thanhToan->so_tien, 0, ',', '.') }} VNĐ</td>
+                                            <td>{{ optional($thanhToan->thoi_diem_thanh_toan)->format('d/m/Y H:i') ?? '-' }}</td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="row g-4 mb-4">
         <div class="col-lg-7">
             <div class="premium-card h-100">
@@ -92,9 +150,14 @@
                             </a>
                         </div>
                         <div class="col-md-6 col-xl-4">
-                            <a href="{{ route('thanh-toan.index') }}" class="d-block border rounded-4 p-3 h-100">
+                            <a href="{{ route('thanh-toan.index', ['trang_thai' => 'cho_xu_ly', 'nguon_tao' => 'khach_hang']) }}" class="d-block border rounded-4 p-3 h-100">
                                 <div class="fw-bold mb-1"><i class="fa-solid fa-credit-card me-2 text-success"></i>Quản lý thanh toán</div>
-                                <div class="small text-muted">Ghi nhận giao dịch và đối soát hóa đơn.</div>
+                                <div class="small text-muted">
+                                    Ghi nhận giao dịch và đối soát hóa đơn.
+                                    @if($tongYeuCauThanhToanChoXuLy > 0)
+                                        Hiện có {{ $tongYeuCauThanhToanChoXuLy }} yêu cầu khách đang chờ duyệt.
+                                    @endif
+                                </div>
                             </a>
                         </div>
                         <div class="col-md-6 col-xl-4">

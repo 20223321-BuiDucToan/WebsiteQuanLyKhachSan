@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class NguoiDung extends Authenticatable
 {
@@ -36,5 +37,10 @@ class NguoiDung extends Authenticatable
             'password' => 'hashed',
             'lan_dang_nhap_cuoi' => 'datetime',
         ];
+    }
+
+    public function khachHang(): HasOne
+    {
+        return $this->hasOne(KhachHang::class, 'nguoi_dung_id');
     }
 }

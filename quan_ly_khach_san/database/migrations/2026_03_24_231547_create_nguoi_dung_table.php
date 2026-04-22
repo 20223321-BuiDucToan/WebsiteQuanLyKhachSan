@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('so_dien_thoai', 20)->nullable();
             $table->string('dia_chi')->nullable();
             $table->string('anh_dai_dien')->nullable();
-            $table->enum('vai_tro', ['admin', 'nhan_vien'])->default('nhan_vien');
+            $table->enum('vai_tro', ['admin', 'nhan_vien', 'khach_hang'])->default('nhan_vien');
             $table->enum('trang_thai', ['hoat_dong', 'tam_khoa'])->default('hoat_dong');
             $table->timestamp('lan_dang_nhap_cuoi')->nullable();
             $table->rememberToken();

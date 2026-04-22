@@ -26,8 +26,8 @@ class AuthController extends Controller
                 'password' => 'required',
             ],
             [
-                'login.required' => 'Vui long nhap email hoac ten dang nhap.',
-                'password.required' => 'Vui long nhap mat khau.',
+                'login.required' => 'Vui lòng nhập email hoặc tên đăng nhập.',
+                'password.required' => 'Vui lòng nhập mật khẩu.',
             ],
         );
 
@@ -37,13 +37,13 @@ class AuthController extends Controller
 
         if (!$nguoiDung) {
             return back()->withErrors([
-                'login' => 'Tai khoan khong ton tai.',
+                'login' => 'Tài khoản không tồn tại.',
             ])->withInput();
         }
 
         if ($nguoiDung->trang_thai === 'tam_khoa') {
             return back()->withErrors([
-                'login' => 'Tai khoan da bi tam khoa.',
+                'login' => 'Tài khoản đã bị tạm khóa.',
             ])->withInput();
         }
 
@@ -55,14 +55,14 @@ class AuthController extends Controller
             ]);
 
             if ($nguoiDung->vai_tro === 'khach_hang') {
-                return redirect()->route('booking.index')->with('success', 'Dang nhap thanh cong.');
+                return redirect()->route('booking.account')->with('success', 'Đăng nhập thành công.');
             }
 
-            return redirect()->route('dashboard')->with('success', 'Dang nhap thanh cong.');
+            return redirect()->route('dashboard')->with('success', 'Đăng nhập thành công.');
         }
 
         return back()->withErrors([
-            'password' => 'Mat khau khong chinh xac.',
+            'password' => 'Mật khẩu không chính xác.',
         ])->withInput();
     }
 
@@ -82,15 +82,15 @@ class AuthController extends Controller
                 'password' => 'required|string|min:6|confirmed',
             ],
             [
-                'ho_ten.required' => 'Ho ten khong duoc de trong.',
-                'ten_dang_nhap.required' => 'Ten dang nhap khong duoc de trong.',
-                'ten_dang_nhap.unique' => 'Ten dang nhap da ton tai.',
-                'email.required' => 'Email khong duoc de trong.',
-                'email.email' => 'Email khong dung dinh dang.',
-                'email.unique' => 'Email da ton tai.',
-                'password.required' => 'Mat khau khong duoc de trong.',
-                'password.min' => 'Mat khau phai tu 6 ky tu tro len.',
-                'password.confirmed' => 'Xac nhan mat khau khong khop.',
+                'ho_ten.required' => 'Họ tên không được để trống.',
+                'ten_dang_nhap.required' => 'Tên đăng nhập không được để trống.',
+                'ten_dang_nhap.unique' => 'Tên đăng nhập đã tồn tại.',
+                'email.required' => 'Email không được để trống.',
+                'email.email' => 'Email không đúng định dạng.',
+                'email.unique' => 'Email đã tồn tại.',
+                'password.required' => 'Mật khẩu không được để trống.',
+                'password.min' => 'Mật khẩu phải từ 6 ký tự trở lên.',
+                'password.confirmed' => 'Xác nhận mật khẩu không khớp.',
             ],
         );
 
@@ -112,7 +112,7 @@ class AuthController extends Controller
 
         Auth::login($nguoiDung);
 
-        return redirect()->route('booking.index')->with('success', 'Dang ky tai khoan khach hang thanh cong.');
+        return redirect()->route('booking.account')->with('success', 'Đăng ký tài khoản khách hàng thành công.');
     }
 
     public function logout(Request $request)
@@ -121,7 +121,7 @@ class AuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('booking.index')->with('success', 'Dang xuat thanh cong.');
+        return redirect()->route('booking.index')->with('success', 'Đăng xuất thành công.');
     }
 
     public function showForgotPassword()
@@ -137,9 +137,9 @@ class AuthController extends Controller
                 'email' => 'required|email|max:255',
             ],
             [
-                'ten_dang_nhap.required' => 'Vui long nhap ten dang nhap.',
-                'email.required' => 'Vui long nhap email.',
-                'email.email' => 'Email khong dung dinh dang.',
+                'ten_dang_nhap.required' => 'Vui lòng nhập tên đăng nhập.',
+                'email.required' => 'Vui lòng nhập email.',
+                'email.email' => 'Email không đúng định dạng.',
             ],
         );
 
@@ -150,13 +150,13 @@ class AuthController extends Controller
 
         if (!$nguoiDung) {
             return back()->withErrors([
-                'email' => 'Ten dang nhap va email khong khop trong he thong.',
+                'email' => 'Tên đăng nhập và email không khớp trong hệ thống.',
             ])->withInput();
         }
 
         if ($nguoiDung->trang_thai === 'tam_khoa') {
             return back()->withErrors([
-                'ten_dang_nhap' => 'Tai khoan nay dang bi tam khoa.',
+                'ten_dang_nhap' => 'Tài khoản này đang bị tạm khóa.',
             ])->withInput();
         }
 
@@ -175,7 +175,7 @@ class AuthController extends Controller
             . '&ten_dang_nhap=' . urlencode($nguoiDung->ten_dang_nhap);
 
         return back()
-            ->with('success', 'Xac thuc thong tin thanh cong. Ban co the dat lai mat khau ngay bay gio.')
+            ->with('success', 'Xác thực thông tin thành công. Bạn có thể đặt lại mật khẩu ngay bây giờ.')
             ->with('reset_link', $resetLink);
     }
 
@@ -198,14 +198,14 @@ class AuthController extends Controller
                 'password' => 'required|string|min:6|confirmed',
             ],
             [
-                'ten_dang_nhap.required' => 'Vui long nhap ten dang nhap.',
-                'email.required' => 'Vui long nhap email.',
-                'email.email' => 'Email khong dung dinh dang.',
-                'email.exists' => 'Email khong ton tai.',
-                'token.required' => 'Token khong hop le.',
-                'password.required' => 'Vui long nhap mat khau moi.',
-                'password.min' => 'Mat khau moi phai tu 6 ky tu.',
-                'password.confirmed' => 'Xac nhan mat khau khong khop.',
+                'ten_dang_nhap.required' => 'Vui lòng nhập tên đăng nhập.',
+                'email.required' => 'Vui lòng nhập email.',
+                'email.email' => 'Email không đúng định dạng.',
+                'email.exists' => 'Email không tồn tại.',
+                'token.required' => 'Token không hợp lệ.',
+                'password.required' => 'Vui lòng nhập mật khẩu mới.',
+                'password.min' => 'Mật khẩu mới phải từ 6 ký tự.',
+                'password.confirmed' => 'Xác nhận mật khẩu không khớp.',
             ],
         );
 
@@ -216,7 +216,7 @@ class AuthController extends Controller
 
         if (!$nguoiDung) {
             return back()->withErrors([
-                'email' => 'Ten dang nhap va email khong khop.',
+                'email' => 'Tên đăng nhập và email không khớp.',
             ])->withInput();
         }
 
@@ -226,19 +226,19 @@ class AuthController extends Controller
 
         if (!$resetRow) {
             return back()->withErrors([
-                'email' => 'Yeu cau dat lai mat khau khong ton tai.',
+                'email' => 'Yêu cầu đặt lại mật khẩu không tồn tại.',
             ])->withInput();
         }
 
         if (!Hash::check($request->token, $resetRow->token)) {
             return back()->withErrors([
-                'token' => 'Lien ket dat lai mat khau khong hop le.',
+                'token' => 'Liên kết đặt lại mật khẩu không hợp lệ.',
             ])->withInput();
         }
 
         if (empty($resetRow->created_at) || now()->diffInMinutes($resetRow->created_at) > 60) {
             return back()->withErrors([
-                'token' => 'Lien ket dat lai mat khau da het han.',
+                'token' => 'Liên kết đặt lại mật khẩu đã hết hạn.',
             ])->withInput();
         }
 
@@ -248,52 +248,11 @@ class AuthController extends Controller
 
         DB::table('password_reset_tokens')->where('email', $request->email)->delete();
 
-        return redirect()->route('login')->with('success', 'Dat lai mat khau thanh cong. Hay dang nhap lai.');
+        return redirect()->route('login')->with('success', 'Đặt lại mật khẩu thành công. Hãy đăng nhập lại.');
     }
 
     private function dongBoKhachHang(NguoiDung $nguoiDung): void
     {
-        $khachHang = null;
-
-        if (!empty($nguoiDung->email)) {
-            $khachHang = KhachHang::query()
-                ->where('email', $nguoiDung->email)
-                ->first();
-        }
-
-        if (!$khachHang && empty($nguoiDung->email) && !empty($nguoiDung->so_dien_thoai)) {
-            $khachHang = KhachHang::query()
-                ->where('so_dien_thoai', $nguoiDung->so_dien_thoai)
-                ->first();
-        }
-
-        if ($khachHang) {
-            $khachHang->update([
-                'ho_ten' => $nguoiDung->ho_ten,
-                'email' => $nguoiDung->email,
-                'so_dien_thoai' => $nguoiDung->so_dien_thoai,
-                'trang_thai' => 'hoat_dong',
-            ]);
-
-            return;
-        }
-
-        KhachHang::create([
-            'ma_khach_hang' => $this->taoMaKhachHang(),
-            'ho_ten' => $nguoiDung->ho_ten,
-            'so_dien_thoai' => $nguoiDung->so_dien_thoai,
-            'email' => $nguoiDung->email,
-            'hang_khach_hang' => 'thuong',
-            'trang_thai' => 'hoat_dong',
-        ]);
-    }
-
-    private function taoMaKhachHang(): string
-    {
-        do {
-            $maKhachHang = 'KH' . now()->format('ymdHis') . random_int(10, 99);
-        } while (KhachHang::query()->where('ma_khach_hang', $maKhachHang)->exists());
-
-        return $maKhachHang;
+        KhachHang::dongBoTuTaiKhoan($nguoiDung);
     }
 }

@@ -1,12 +1,67 @@
-﻿@extends('layouts.admin')
+@extends('layouts.admin')
 
 @section('title', 'Quản lý phòng')
+
+@push('styles')
+    <style>
+        .room-thumb-wrap {
+            position: relative;
+            width: 88px;
+            height: 68px;
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid #d8e2ec;
+            background: linear-gradient(180deg, #f7fbff, #edf4fb);
+        }
+
+        .room-thumb-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .room-thumb-empty {
+            width: 100%;
+            height: 100%;
+            display: grid;
+            place-items: center;
+            color: #68839f;
+            font-size: 1.15rem;
+        }
+
+        .room-thumb-count {
+            position: absolute;
+            right: 8px;
+            bottom: 8px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            border-radius: 999px;
+            padding: 4px 8px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #fff;
+            background: rgba(14, 31, 53, 0.78);
+        }
+
+        .room-code {
+            font-weight: 700;
+        }
+
+        .room-subtext {
+            margin-top: 4px;
+            color: #68839f;
+            font-size: 0.86rem;
+        }
+    </style>
+@endpush
 
 @section('content')
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
         <div>
             <h2 class="section-title">Quản lý phòng</h2>
-            <p class="section-subtitle">Theo dõi trạng thái khai thác, vệ sinh và hoạt động của từng phòng.</p>
+            <p class="section-subtitle">Theo dõi trạng thái khai thác, vệ sinh, hoạt động và hình ảnh của từng phòng.</p>
         </div>
 
         <a href="{{ route('phong.create') }}" class="btn btn-gradient">
@@ -101,6 +156,7 @@
                 <table class="table align-middle">
                     <thead>
                         <tr>
+                            <th>Ảnh</th>
                             <th>Mã phòng</th>
                             <th>Số phòng</th>
                             <th>Loại phòng</th>
@@ -113,8 +169,31 @@
                     </thead>
                     <tbody>
                         @forelse($danhSachPhong as $phong)
+                            @php
+                                $anhDauTien = $phong->layAnhPhongDauTienUrl();
+                                $tongSoAnh = count($phong->layDanhSachAnhPhong());
+                            @endphp
                             <tr>
-                                <td class="fw-semibold">{{ $phong->ma_phong }}</td>
+                                <td>
+                                    <div class="room-thumb-wrap">
+                                        @if($anhDauTien)
+                                            <img src="{{ $anhDauTien }}" alt="Ảnh phòng {{ $phong->so_phong }}">
+                                            <span class="room-thumb-count">
+                                                <i class="fa-regular fa-images"></i>{{ $tongSoAnh }}
+                                            </span>
+                                        @else
+                                            <div class="room-thumb-empty">
+                                                <i class="fa-regular fa-image"></i>
+                                            </div>
+                                        @endif
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="room-code">{{ $phong->ma_phong }}</div>
+                                    <div class="room-subtext">
+                                        {{ $tongSoAnh > 0 ? $tongSoAnh . ' ảnh đã đăng' : 'Chưa có ảnh' }}
+                                    </div>
+                                </td>
                                 <td class="fw-bold">{{ $phong->so_phong }}</td>
                                 <td>{{ $phong->loaiPhong?->ten_loai_phong ?? '-' }}</td>
                                 <td>{{ $phong->tang ?? '-' }}</td>
@@ -141,7 +220,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8" class="text-center text-muted py-4">Chưa có phòng nào trong hệ thống.</td>
+                                <td colspan="9" class="text-center text-muted py-4">Chưa có phòng nào trong hệ thống.</td>
                             </tr>
                         @endforelse
                     </tbody>

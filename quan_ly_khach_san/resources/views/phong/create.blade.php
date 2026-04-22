@@ -12,11 +12,13 @@
         <div class="card-body p-4">
             @if($danhSachLoaiPhong->isEmpty())
                 <div class="alert alert-warning rounded-4 mb-4">
-                    Chưa có loại phòng hoạt động. Vui lòng tạo dữ liệu loại phòng trước khi thêm phòng mới.
+                    Chưa có loại phòng hoạt động. Vui lòng
+                    <a href="{{ route('loai-phong.create') }}" class="alert-link">tạo loại phòng</a>
+                    trước khi thêm phòng mới.
                 </div>
             @endif
 
-            <form action="{{ route('phong.store') }}" method="POST">
+            <form action="{{ route('phong.store') }}" method="POST" enctype="multipart/form-data">
                 @csrf
 
                 @include('phong._form')
