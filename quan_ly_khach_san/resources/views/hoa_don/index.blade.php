@@ -5,34 +5,20 @@
 @push('styles')
     <style>
         .invoice-hero {
-<<<<<<< HEAD
-            border: 1px solid #e5edf6;
-            background: #fff;
-            color: #173652;
-=======
             border: none;
             background:
                 radial-gradient(circle at top right, rgba(255, 255, 255, 0.24), transparent 34%),
                 linear-gradient(135deg, #0f2944, #0f766e 58%, #14b8a6);
             color: #fff;
->>>>>>> 8e80bbc81bba78f78f2e090ea3984d8c0db04b6e
         }
 
         .invoice-hero .section-title,
         .invoice-hero .section-subtitle {
-<<<<<<< HEAD
-            color: inherit;
-        }
-
-        .invoice-hero .section-subtitle {
-            opacity: 1;
-=======
             color: #fff;
         }
 
         .invoice-hero .section-subtitle {
             opacity: 0.82;
->>>>>>> 8e80bbc81bba78f78f2e090ea3984d8c0db04b6e
         }
 
         .hero-stat-grid {
@@ -45,25 +31,16 @@
         .hero-stat-card {
             border-radius: 18px;
             padding: 16px;
-<<<<<<< HEAD
-            background: #f8fbff;
-            border: 1px solid #dbe7f2;
-=======
             background: rgba(255, 255, 255, 0.12);
             border: 1px solid rgba(255, 255, 255, 0.16);
             backdrop-filter: blur(10px);
->>>>>>> 8e80bbc81bba78f78f2e090ea3984d8c0db04b6e
         }
 
         .hero-stat-label {
             font-size: 0.76rem;
             text-transform: uppercase;
             letter-spacing: 0.08em;
-<<<<<<< HEAD
-            color: #6b8298;
-=======
             opacity: 0.84;
->>>>>>> 8e80bbc81bba78f78f2e090ea3984d8c0db04b6e
         }
 
         .hero-stat-value {
@@ -76,11 +53,7 @@
         .hero-stat-note {
             margin-top: 6px;
             font-size: 0.82rem;
-<<<<<<< HEAD
-            color: #6b8298;
-=======
             opacity: 0.78;
->>>>>>> 8e80bbc81bba78f78f2e090ea3984d8c0db04b6e
         }
 
         .quick-filter {
@@ -306,11 +279,7 @@
 
     <div class="premium-card mb-4">
         <div class="card-body p-4">
-<<<<<<< HEAD
-            <div class="d-none">
-=======
             <div class="d-flex flex-wrap gap-2 mb-3">
->>>>>>> 8e80bbc81bba78f78f2e090ea3984d8c0db04b6e
                 @foreach($quickFilters as $filter)
                     <a href="{{ route('hoa-don.index', $filter['query']) }}" class="quick-filter">
                         <i class="fa-regular fa-clock"></i>{{ $filter['label'] }}
@@ -373,11 +342,7 @@
     </div>
 
     <div class="row g-4">
-<<<<<<< HEAD
-        <div class="col-12">
-=======
         <div class="col-xxl-8">
->>>>>>> 8e80bbc81bba78f78f2e090ea3984d8c0db04b6e
             <div class="premium-card h-100">
                 <div class="card-body p-4">
                     <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
@@ -488,11 +453,7 @@
             </div>
         </div>
 
-<<<<<<< HEAD
-        <div class="col-xxl-4 d-none">
-=======
         <div class="col-xxl-4">
->>>>>>> 8e80bbc81bba78f78f2e090ea3984d8c0db04b6e
             <div class="premium-card mb-4">
                 <div class="card-body p-4">
                     <div class="d-flex justify-content-between align-items-start gap-3 mb-3">

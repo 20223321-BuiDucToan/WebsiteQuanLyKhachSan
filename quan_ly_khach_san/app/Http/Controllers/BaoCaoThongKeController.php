@@ -31,14 +31,8 @@ class BaoCaoThongKeController extends Controller
 
         $soNgayBaoCao = max(1, $tuNgay->copy()->startOfDay()->diffInDays($denNgay->copy()->startOfDay()) + 1);
 
-<<<<<<< HEAD
         $danhSachDatPhong = $this->taoTruyVanDatPhongTheoKyLuuTru($tuNgay, $denNgay)
             ->with('khachHang')
-=======
-        $danhSachDatPhong = DatPhong::query()
-            ->with('khachHang')
-            ->whereBetween('ngay_dat', [$tuNgay, $denNgay])
->>>>>>> 8e80bbc81bba78f78f2e090ea3984d8c0db04b6e
             ->get();
 
         $danhSachHoaDonTrongKy = HoaDon::query()
@@ -90,13 +84,7 @@ class BaoCaoThongKeController extends Controller
             ->whereBetween('thoi_diem_xuat', [$tuNgayKyTruoc, $denNgayKyTruoc])
             ->where('trang_thai', '!=', 'da_huy')
             ->sum('tong_tien');
-<<<<<<< HEAD
         $tongDatPhongKyTruoc = $this->taoTruyVanDatPhongTheoKyLuuTru($tuNgayKyTruoc, $denNgayKyTruoc)->count();
-=======
-        $tongDatPhongKyTruoc = DatPhong::query()
-            ->whereBetween('ngay_dat', [$tuNgayKyTruoc, $denNgayKyTruoc])
-            ->count();
->>>>>>> 8e80bbc81bba78f78f2e090ea3984d8c0db04b6e
         $dongTienKyTruoc = (float) ThanhToan::query()
             ->whereBetween('thoi_diem_thanh_toan', [$tuNgayKyTruoc, $denNgayKyTruoc])
             ->where('trang_thai', 'thanh_cong')
@@ -124,22 +112,14 @@ class BaoCaoThongKeController extends Controller
 
         $duLieuDatPhong = $this->tongHopTheoCotMoc(
             $danhSachDatPhong,
-<<<<<<< HEAD
             fn(DatPhong $datPhong) => $datPhong->ngay_nhan_phong_du_kien,
-=======
-            fn(DatPhong $datPhong) => $datPhong->ngay_dat,
->>>>>>> 8e80bbc81bba78f78f2e090ea3984d8c0db04b6e
             fn() => 1,
             $cotMocThoiGian
         );
 
         $duLieuDatHuy = $this->tongHopTheoCotMoc(
             $danhSachDatPhong->where('trang_thai', 'da_huy')->values(),
-<<<<<<< HEAD
             fn(DatPhong $datPhong) => $datPhong->ngay_nhan_phong_du_kien,
-=======
-            fn(DatPhong $datPhong) => $datPhong->ngay_dat,
->>>>>>> 8e80bbc81bba78f78f2e090ea3984d8c0db04b6e
             fn() => 1,
             $cotMocThoiGian
         );
@@ -324,7 +304,6 @@ class BaoCaoThongKeController extends Controller
         return $tongDemDaDat;
     }
 
-<<<<<<< HEAD
     private function taoTruyVanDatPhongTheoKyLuuTru(Carbon $tuNgay, Carbon $denNgay): Builder
     {
         return DatPhong::query()
@@ -343,19 +322,6 @@ class BaoCaoThongKeController extends Controller
 
     private function tinhBienDongPhanTram(float $giaTriHienTai, float $giaTriKyTruoc): float
     {
-=======
-    private function layKySoSanh(Carbon $tuNgay, Carbon $denNgay): array
-    {
-        $soNgay = max(1, $tuNgay->copy()->startOfDay()->diffInDays($denNgay->copy()->startOfDay()) + 1);
-        $denNgayKyTruoc = $tuNgay->copy()->subDay()->endOfDay();
-        $tuNgayKyTruoc = $denNgayKyTruoc->copy()->subDays($soNgay - 1)->startOfDay();
-
-        return [$tuNgayKyTruoc, $denNgayKyTruoc];
-    }
-
-    private function tinhBienDongPhanTram(float $giaTriHienTai, float $giaTriKyTruoc): float
-    {
->>>>>>> 8e80bbc81bba78f78f2e090ea3984d8c0db04b6e
         if ($giaTriKyTruoc == 0.0) {
             return $giaTriHienTai > 0 ? 100.0 : 0.0;
         }

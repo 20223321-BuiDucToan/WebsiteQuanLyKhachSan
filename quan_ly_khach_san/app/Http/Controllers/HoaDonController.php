@@ -51,15 +51,11 @@ class HoaDonController extends Controller
 
         $danhSachHoaDonDaLoc = (clone $truyVanHoaDon)
             ->get()
-<<<<<<< HEAD
             ->map(function (HoaDon $hoaDon) {
                 $this->dongBoTrangThaiTheoThanhToan($hoaDon);
 
                 return $this->boSungDuLieuHoaDon($hoaDon);
             });
-=======
-            ->map(fn(HoaDon $hoaDon) => $this->boSungDuLieuHoaDon($hoaDon));
->>>>>>> 8e80bbc81bba78f78f2e090ea3984d8c0db04b6e
 
         $thongKe = $this->tongHopHoaDon($danhSachHoaDonDaLoc);
 
@@ -212,7 +208,6 @@ class HoaDonController extends Controller
             return redirect()
                 ->back()
                 ->with('error', 'Không thể chuyển sang đã thanh toán khi số tiền thu chưa đủ.');
-<<<<<<< HEAD
         }
 
         if ($trangThaiMoi === 'chua_thanh_toan' && $soTienDaThanhToan > 0) {
@@ -234,8 +229,6 @@ class HoaDonController extends Controller
             return redirect()
                 ->back()
                 ->with('error', 'Khong the huy hoa don da ghi nhan thanh toan thanh cong.');
-=======
->>>>>>> 8e80bbc81bba78f78f2e090ea3984d8c0db04b6e
         }
 
         $hoaDon->update([
@@ -252,16 +245,12 @@ class HoaDonController extends Controller
     private function taoTruyVanHoaDon(?string $tuKhoa, ?string $trangThai, ?string $tuNgay, ?string $denNgay)
     {
         return HoaDon::query()
-<<<<<<< HEAD
             ->with([
                 'datPhong.khachHang',
                 'datPhong.chiTietDatPhong.phong',
                 'datPhong.suDungDichVu',
                 'thanhToan',
             ])
-=======
-            ->with(['datPhong.khachHang', 'datPhong.chiTietDatPhong.phong', 'thanhToan'])
->>>>>>> 8e80bbc81bba78f78f2e090ea3984d8c0db04b6e
             ->when($tuKhoa, function ($query) use ($tuKhoa) {
                 $query->where(function ($innerQuery) use ($tuKhoa) {
                     $innerQuery
