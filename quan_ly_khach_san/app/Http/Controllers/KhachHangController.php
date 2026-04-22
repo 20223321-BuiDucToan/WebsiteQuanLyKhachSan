@@ -7,7 +7,10 @@ use App\Models\NguoiDung;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+<<<<<<< HEAD
 use Illuminate\Support\Facades\DB;
+=======
+>>>>>>> 8e80bbc81bba78f78f2e090ea3984d8c0db04b6e
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -392,6 +395,7 @@ class KhachHangController extends Controller
     {
         $this->lamSachDuLieuDauVao($request);
 
+<<<<<<< HEAD
         $quyTacSoDienThoai = [
             'nullable',
             'string',
@@ -413,12 +417,29 @@ class KhachHangController extends Controller
             array_unshift($quyTacEmail, 'nullable');
         }
 
+=======
+>>>>>>> 8e80bbc81bba78f78f2e090ea3984d8c0db04b6e
         return $request->validate([
             'ho_ten' => ['required', 'string', 'max:100'],
             'gioi_tinh' => ['nullable', Rule::in(array_keys(KhachHang::GIOI_TINH))],
             'ngay_sinh' => ['nullable', 'date', 'before:today'],
+<<<<<<< HEAD
             'so_dien_thoai' => $quyTacSoDienThoai,
             'email' => $quyTacEmail,
+=======
+            'so_dien_thoai' => [
+                'nullable',
+                'string',
+                'max:20',
+                Rule::unique('khach_hang', 'so_dien_thoai')->ignore($khachHang?->id),
+            ],
+            'email' => [
+                'nullable',
+                'email',
+                'max:100',
+                Rule::unique('khach_hang', 'email')->ignore($khachHang?->id),
+            ],
+>>>>>>> 8e80bbc81bba78f78f2e090ea3984d8c0db04b6e
             'so_giay_to' => [
                 'nullable',
                 'string',
@@ -522,6 +543,7 @@ class KhachHangController extends Controller
             ->get();
 
         foreach ($danhSachTaiKhoanKhachHang as $taiKhoanKhachHang) {
+<<<<<<< HEAD
             KhachHang::dongBoTuTaiKhoan($taiKhoanKhachHang);
         }
     }
@@ -542,4 +564,39 @@ class KhachHangController extends Controller
             'trang_thai' => $khachHang->trang_thai === 'tam_khoa' ? 'tam_khoa' : 'hoat_dong',
         ]);
     }
+=======
+            $email = trim((string) ($taiKhoanKhachHang->email ?? ''));
+            $soDienThoai = trim((string) ($taiKhoanKhachHang->so_dien_thoai ?? ''));
+
+            if ($email === '' && $soDienThoai === '') {
+                continue;
+            }
+
+            $khachHang = KhachHang::timTheoThongTinLienHe($email, $soDienThoai);
+            $trangThaiKhachHang = $taiKhoanKhachHang->trang_thai === 'tam_khoa'
+                ? 'tam_khoa'
+                : 'hoat_dong';
+
+            if ($khachHang) {
+                $khachHang->update([
+                    'ho_ten' => $taiKhoanKhachHang->ho_ten,
+                    'email' => $email !== '' ? $email : null,
+                    'so_dien_thoai' => $soDienThoai !== '' ? $soDienThoai : null,
+                    'trang_thai' => $trangThaiKhachHang,
+                ]);
+
+                continue;
+            }
+
+            KhachHang::query()->create([
+                'ma_khach_hang' => KhachHang::taoMaMoi(),
+                'ho_ten' => $taiKhoanKhachHang->ho_ten,
+                'email' => $email !== '' ? $email : null,
+                'so_dien_thoai' => $soDienThoai !== '' ? $soDienThoai : null,
+                'hang_khach_hang' => 'thuong',
+                'trang_thai' => $trangThaiKhachHang,
+            ]);
+        }
+    }
+>>>>>>> 8e80bbc81bba78f78f2e090ea3984d8c0db04b6e
 }

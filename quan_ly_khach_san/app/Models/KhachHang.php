@@ -68,11 +68,14 @@ class KhachHang extends Model
         return $this->hasMany(DatPhong::class, 'khach_hang_id');
     }
 
+<<<<<<< HEAD
     public function nguoiDung(): BelongsTo
     {
         return $this->belongsTo(NguoiDung::class, 'nguoi_dung_id');
     }
 
+=======
+>>>>>>> 8e80bbc81bba78f78f2e090ea3984d8c0db04b6e
     public function getAvatarUrlAttribute(): ?string
     {
         if (!$this->anh_dai_dien) {
@@ -119,6 +122,7 @@ class KhachHang extends Model
             ->first();
     }
 
+<<<<<<< HEAD
     public static function timTheoTaiKhoan(?NguoiDung $nguoiDung): ?self
     {
         if (! $nguoiDung) {
@@ -189,6 +193,8 @@ class KhachHang extends Model
         return $khachHang;
     }
 
+=======
+>>>>>>> 8e80bbc81bba78f78f2e090ea3984d8c0db04b6e
     public static function taoMaMoi(): string
     {
         do {

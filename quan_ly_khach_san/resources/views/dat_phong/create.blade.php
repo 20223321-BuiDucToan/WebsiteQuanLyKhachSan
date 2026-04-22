@@ -5,18 +5,34 @@
 @push('styles')
     <style>
         .booking-create-hero {
+<<<<<<< HEAD
             border: 1px solid #e5edf6;
             background: #fff;
             color: #173652;
+=======
+            border: none;
+            background:
+                radial-gradient(circle at top right, rgba(255, 255, 255, 0.22), transparent 34%),
+                linear-gradient(135deg, #173652, #2563eb 55%, #38bdf8);
+            color: #fff;
+>>>>>>> 8e80bbc81bba78f78f2e090ea3984d8c0db04b6e
         }
 
         .booking-create-hero .section-title,
         .booking-create-hero .section-subtitle {
+<<<<<<< HEAD
             color: inherit;
         }
 
         .booking-create-hero .section-subtitle {
             opacity: 1;
+=======
+            color: #fff;
+        }
+
+        .booking-create-hero .section-subtitle {
+            opacity: 0.82;
+>>>>>>> 8e80bbc81bba78f78f2e090ea3984d8c0db04b6e
         }
 
         .hero-stat-grid {
@@ -29,15 +45,25 @@
         .hero-stat-card {
             border-radius: 18px;
             padding: 16px;
+<<<<<<< HEAD
             background: #f8fbff;
             border: 1px solid #dbe7f2;
+=======
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            backdrop-filter: blur(10px);
+>>>>>>> 8e80bbc81bba78f78f2e090ea3984d8c0db04b6e
         }
 
         .hero-stat-label {
             font-size: 0.76rem;
             text-transform: uppercase;
             letter-spacing: 0.08em;
+<<<<<<< HEAD
             color: #6b8298;
+=======
+            opacity: 0.84;
+>>>>>>> 8e80bbc81bba78f78f2e090ea3984d8c0db04b6e
         }
 
         .hero-stat-value {
@@ -50,7 +76,11 @@
         .hero-stat-note {
             margin-top: 6px;
             font-size: 0.82rem;
+<<<<<<< HEAD
             color: #6b8298;
+=======
+            opacity: 0.78;
+>>>>>>> 8e80bbc81bba78f78f2e090ea3984d8c0db04b6e
         }
 
         .section-block {
@@ -80,7 +110,11 @@
 
         .preview-panel {
             border-radius: 22px;
+<<<<<<< HEAD
             background: #fff;
+=======
+            background: linear-gradient(180deg, #f8fbff, #ffffff);
+>>>>>>> 8e80bbc81bba78f78f2e090ea3984d8c0db04b6e
             border: 1px solid #dbe7f2;
             padding: 22px;
         }
@@ -124,7 +158,13 @@
         }
 
         .helper-list {
+<<<<<<< HEAD
             display: none;
+=======
+            display: grid;
+            gap: 10px;
+            margin-top: 18px;
+>>>>>>> 8e80bbc81bba78f78f2e090ea3984d8c0db04b6e
         }
 
         .helper-item {

@@ -26,7 +26,11 @@ class DatPhongController extends Controller
     {
         $request->validate([
             'tu_khoa' => ['nullable', 'string', 'max:100'],
+<<<<<<< HEAD
             'trang_thai' => ['nullable', Rule::in(DatPhong::DANH_SACH_TRANG_THAI)],
+=======
+            'trang_thai' => ['nullable', Rule::in(self::TRANG_THAI_DAT_PHONG)],
+>>>>>>> 8e80bbc81bba78f78f2e090ea3984d8c0db04b6e
             'nguon_dat' => ['nullable', Rule::in(['truc_tiep', 'website', 'dien_thoai', 'zalo', 'khac'])],
             'tu_ngay' => ['nullable', 'date'],
             'den_ngay' => ['nullable', 'date', 'after_or_equal:tu_ngay'],
@@ -86,8 +90,13 @@ class DatPhongController extends Controller
 
         $thongKePhong = [
             'tong_hoat_dong' => $danhSachPhong->count(),
+<<<<<<< HEAD
             'san_sang_hom_nay' => $danhSachPhong->filter(fn(Phong $phong) => $phong->trang_thai === Phong::TRANG_THAI_TRONG)->count(),
             'dang_su_dung' => $danhSachPhong->where('trang_thai', Phong::TRANG_THAI_DANG_SU_DUNG)->count(),
+=======
+            'san_sang_hom_nay' => $danhSachPhong->filter(fn(Phong $phong) => in_array($phong->trang_thai, ['trong', 'don_dep'], true))->count(),
+            'dang_su_dung' => $danhSachPhong->where('trang_thai', 'dang_su_dung')->count(),
+>>>>>>> 8e80bbc81bba78f78f2e090ea3984d8c0db04b6e
             'gia_trung_binh' => $giaTheoPhong->filter(fn(float $gia) => $gia > 0)->avg() ?? 0,
         ];
 
@@ -196,30 +205,41 @@ class DatPhongController extends Controller
             'khachHang',
             'nguoiTao',
             'chiTietDatPhong.phong.loaiPhong',
+<<<<<<< HEAD
             'suDungDichVu.dichVu',
             'suDungDichVu.nguoiTao',
+=======
+>>>>>>> 8e80bbc81bba78f78f2e090ea3984d8c0db04b6e
             'hoaDon.thanhToan',
         ]);
 
         $datPhong = $this->boSungDuLieuDatPhong($datPhong);
         $hoaDonHienTai = $datPhong->hoa_don_hien_tai;
         $timeline = $this->taoTimelineDatPhong($datPhong, $hoaDonHienTai);
+<<<<<<< HEAD
         $danhSachDichVuHoatDong = \App\Models\DichVu::query()
             ->where('trang_thai', 'hoat_dong')
             ->orderBy('ten_dich_vu')
             ->get();
         $coTheCapNhatDichVu = in_array($datPhong->trang_thai, ['da_xac_nhan', 'da_nhan_phong', 'da_tra_phong'], true)
             && (!$hoaDonHienTai || $hoaDonHienTai->trang_thai !== 'da_thanh_toan');
+=======
+>>>>>>> 8e80bbc81bba78f78f2e090ea3984d8c0db04b6e
 
         return view('dat_phong.show', [
             'datPhong' => $datPhong,
             'tongTienPhong' => $datPhong->tong_tien_tam_tinh,
+<<<<<<< HEAD
             'tongTienDichVu' => $datPhong->tong_tien_dich_vu,
             'tongThanhToanDuKien' => $datPhong->tong_thanh_toan_du_kien,
             'hoaDonHienTai' => $hoaDonHienTai,
             'timeline' => $timeline,
             'danhSachDichVuHoatDong' => $danhSachDichVuHoatDong,
             'coTheCapNhatDichVu' => $coTheCapNhatDichVu,
+=======
+            'hoaDonHienTai' => $hoaDonHienTai,
+            'timeline' => $timeline,
+>>>>>>> 8e80bbc81bba78f78f2e090ea3984d8c0db04b6e
         ]);
     }
 
@@ -232,6 +252,7 @@ class DatPhongController extends Controller
             ],
         ]);
 
+<<<<<<< HEAD
         $trangThaiHienTai = (string) $datPhong->trang_thai;
         $trangThaiMoi = (string) $duLieu['trang_thai'];
 
@@ -259,6 +280,12 @@ class DatPhongController extends Controller
                 $daHuyHoaDonLienQuan = $this->dongBoHoaDonKhiHuyDatPhong($datPhong);
             }
 
+=======
+        $daTaoHoaDonTuDong = false;
+
+        DB::transaction(function () use ($datPhong, $duLieu, &$daTaoHoaDonTuDong) {
+            $trangThaiMoi = $duLieu['trang_thai'];
+>>>>>>> 8e80bbc81bba78f78f2e090ea3984d8c0db04b6e
             $duLieuCapNhatDatPhong = [
                 'trang_thai' => $duLieu['trang_thai'],
             ];
@@ -295,7 +322,11 @@ class DatPhongController extends Controller
 
             $this->dongBoTrangThaiPhongTheoDatPhong($datPhongSauCapNhat);
 
+<<<<<<< HEAD
             if ($duLieu['trang_thai'] === 'da_tra_phong') {
+=======
+            if ($trangThaiMoi === 'da_tra_phong') {
+>>>>>>> 8e80bbc81bba78f78f2e090ea3984d8c0db04b6e
                 $daTaoHoaDonTuDong = $this->taoHoaDonTuDongNeuCan($datPhongSauCapNhat);
             }
         });
@@ -304,6 +335,7 @@ class DatPhongController extends Controller
             ? 'Cập nhật trạng thái đơn đặt phòng thành công. Hệ thống đã tự động tạo hóa đơn.'
             : 'Cập nhật trạng thái đơn đặt phòng thành công.';
 
+<<<<<<< HEAD
         $thongBao = 'Cap nhat trang thai don dat phong thanh cong.';
 
         if ($daHuyHoaDonLienQuan) {
@@ -314,6 +346,8 @@ class DatPhongController extends Controller
             $thongBao .= ' He thong da tu dong tao hoa don.';
         }
 
+=======
+>>>>>>> 8e80bbc81bba78f78f2e090ea3984d8c0db04b6e
         return redirect()
             ->back()
             ->with('success', $thongBao);
@@ -352,8 +386,14 @@ class DatPhongController extends Controller
 
     private function boSungDuLieuDatPhong(DatPhong $datPhong): DatPhong
     {
+<<<<<<< HEAD
         $tongTienTamTinh = $datPhong->tinhTongTienPhong();
         $tongTienDichVu = $datPhong->tinhTongTienDichVu();
+=======
+        $tongTienTamTinh = (float) $datPhong->chiTietDatPhong->sum(function (ChiTietDatPhong $chiTiet) {
+            return (float) $chiTiet->gia_phong * (int) $chiTiet->so_dem;
+        });
+>>>>>>> 8e80bbc81bba78f78f2e090ea3984d8c0db04b6e
 
         $tongSoPhong = $datPhong->chiTietDatPhong->count();
         $tongSoDem = (int) $datPhong->chiTietDatPhong->sum('so_dem');
@@ -362,10 +402,13 @@ class DatPhongController extends Controller
             ->sortByDesc('id')
             ->first();
 
+<<<<<<< HEAD
         if ($hoaDonHienTai) {
             $hoaDonHienTai->dongBoGiaTriTuDatPhong(false);
         }
 
+=======
+>>>>>>> 8e80bbc81bba78f78f2e090ea3984d8c0db04b6e
         $soTienDaThuHoaDon = $hoaDonHienTai && $hoaDonHienTai->relationLoaded('thanhToan')
             ? (float) $hoaDonHienTai->thanhToan->where('trang_thai', 'thanh_cong')->sum('so_tien')
             : 0;
@@ -414,8 +457,11 @@ class DatPhongController extends Controller
         }
 
         $datPhong->setAttribute('tong_tien_tam_tinh', $tongTienTamTinh);
+<<<<<<< HEAD
         $datPhong->setAttribute('tong_tien_dich_vu', $tongTienDichVu);
         $datPhong->setAttribute('tong_thanh_toan_du_kien', max(0, $tongTienTamTinh + $tongTienDichVu));
+=======
+>>>>>>> 8e80bbc81bba78f78f2e090ea3984d8c0db04b6e
         $datPhong->setAttribute('tong_so_phong', $tongSoPhong);
         $datPhong->setAttribute('tong_so_dem', $tongSoDem);
         $datPhong->setAttribute('hoa_don_hien_tai', $hoaDonHienTai);
@@ -578,6 +624,7 @@ class DatPhongController extends Controller
         return $maDatPhong;
     }
 
+<<<<<<< HEAD
     private function baoDamCoTheNhanPhong(DatPhong $datPhong): void
     {
         $ngayNhanDuKien = $datPhong->ngay_nhan_phong_du_kien?->copy()->startOfDay();
@@ -621,6 +668,8 @@ class DatPhongController extends Controller
         return true;
     }
 
+=======
+>>>>>>> 8e80bbc81bba78f78f2e090ea3984d8c0db04b6e
     private function taoHoaDonTuDongNeuCan(DatPhong $datPhong): bool
     {
         $daCoHoaDon = $datPhong->hoaDon
@@ -631,6 +680,7 @@ class DatPhongController extends Controller
             return false;
         }
 
+<<<<<<< HEAD
         $tongTienPhong = $datPhong->tinhTongTienPhong();
         $tongTienDichVu = $datPhong->tinhTongTienDichVu();
 
@@ -642,6 +692,20 @@ class DatPhongController extends Controller
             'dat_phong_id' => $datPhong->id,
             'tong_tien_phong' => $tongTienPhong,
             'tong_tien_dich_vu' => $tongTienDichVu,
+=======
+        $tongTienPhong = (float) $datPhong->chiTietDatPhong->sum(function (ChiTietDatPhong $chiTiet) {
+            return (float) $chiTiet->gia_phong * (int) $chiTiet->so_dem;
+        });
+
+        $tongTien = max(0, $tongTienPhong);
+        $trangThaiHoaDon = $tongTien > 0 ? 'chua_thanh_toan' : 'da_thanh_toan';
+
+        HoaDon::query()->create([
+            'ma_hoa_don' => $this->taoMaHoaDon(),
+            'dat_phong_id' => $datPhong->id,
+            'tong_tien_phong' => $tongTienPhong,
+            'tong_tien_dich_vu' => 0,
+>>>>>>> 8e80bbc81bba78f78f2e090ea3984d8c0db04b6e
             'giam_gia' => 0,
             'thue' => 0,
             'tong_tien' => $tongTien,
@@ -651,8 +715,11 @@ class DatPhongController extends Controller
             'ghi_chu' => 'Hóa đơn được tạo tự động khi đơn đặt phòng chuyển sang trạng thái đã trả phòng.',
         ]);
 
+<<<<<<< HEAD
         $hoaDon->giaiPhongSauKhiHoanTatThanhToan();
 
+=======
+>>>>>>> 8e80bbc81bba78f78f2e090ea3984d8c0db04b6e
         return true;
     }
 
