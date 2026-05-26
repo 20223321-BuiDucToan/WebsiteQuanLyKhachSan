@@ -274,138 +274,130 @@
             background: #fff;
         }
 
-       .quick-actions {
-    width: min(100%, 1180px);
-    margin: -18px auto 8px;
-    border-radius: 24px;
-    border: 1px solid rgba(255, 255, 255, 0.9);
-    background: linear-gradient(
-        135deg,
-        rgba(255, 255, 255, 0.96),
-        rgba(230, 246, 255, 0.92)
-    );
-    box-shadow: 0 22px 48px rgba(7, 27, 58, 0.18);
-    backdrop-filter: blur(16px);
-    padding: 14px;
-    display: flex;
-    gap: 14px;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    position: relative;
-    z-index: 3;
-}
+        .quick-actions {
+            position: absolute;
+            left: clamp(22px, 4vw, 58px);
+            bottom: clamp(22px, 4vw, 46px);
+            z-index: 3;
+            width: min(430px, calc(100% - 44px));
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            padding: 0;
+        }
 
-.quick-action {
-    flex: 1 1 240px;
-    position: relative;
-    overflow: hidden;
-    border: 1px solid rgba(15, 118, 110, 0.16);
-    border-radius: 18px;
-    background:
-        linear-gradient(135deg, #ffffff 0%, #f0fbf9 100%);
-    color: #10243e;
-    padding: 16px 18px;
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 14px;
-    box-shadow: 0 14px 28px rgba(16, 42, 67, 0.1);
-    transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
-}
+        .search-strip {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            justify-self: end;
+            border-radius: 18px;
+            border: 1px solid rgba(176, 213, 238, 0.95);
+            background:
+                linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba(242, 248, 255, 0.95));
+            box-shadow: 0 20px 44px rgba(10, 31, 53, 0.22);
+            backdrop-filter: blur(12px);
+            padding: 10px;
+        }
 
-.quick-action::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    width: 5px;
-    background: linear-gradient(180deg, #0f766e, #38bdf8, #d8a84f);
-}
+        .search-strip::before {
+            content: "";
+            display: block;
+            height: 3px;
+            border-radius: 999px;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, var(--brand), #38bdf8, var(--gold));
+        }
 
-.quick-action:hover {
-    color: #071b3a;
-    border-color: rgba(15, 118, 110, 0.42);
-    background: linear-gradient(135deg, #ffffff 0%, #e7fbf8 100%);
-    box-shadow: 0 20px 42px rgba(7, 27, 58, 0.18);
-    transform: translateY(-4px);
-}
+        .quick-action {
+            position: relative;
+            overflow: hidden;
+            min-height: 74px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.36);
+            background: linear-gradient(135deg, rgba(7, 27, 58, 0.88), rgba(15, 118, 110, 0.84));
+            color: #ffffff;
+            padding: 14px 18px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            box-shadow: 0 18px 42px rgba(3, 12, 26, 0.34);
+            backdrop-filter: blur(14px);
+            transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+        }
 
-.quick-action i {
-    width: 46px;
-    height: 46px;
-    flex: 0 0 46px;
-    border-radius: 16px;
-    display: grid;
-    place-items: center;
-    color: #ffffff;
-    background: linear-gradient(135deg, #0f766e, #0ea5e9);
-    box-shadow: 0 12px 22px rgba(15, 118, 110, 0.28);
-    font-size: 1.05rem;
-}
-
-.quick-action small {
-    display: block;
-    margin-bottom: 3px;
-    color: #0f766e;
-    line-height: 1.1;
-    font-size: 0.76rem;
-    font-weight: 900;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-}
-
-.quick-action strong {
-    display: block;
-    color: #10243e;
-    line-height: 1.15;
-    font-size: 1.02rem;
-    font-weight: 900;
-}
+        .quick-action::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(circle at 0% 0%, rgba(255, 255, 255, 0.24), transparent 34%),
+                linear-gradient(90deg, rgba(216, 168, 79, 0.24), transparent 55%);
+            opacity: 0.95;
+            pointer-events: none;
+        }
 
         .quick-action:hover {
-            color: var(--ink-900);
-            border-color: #bcd2e5;
-            background: #f9fcff;
+            color: #ffffff;
+            border-color: rgba(245, 213, 143, 0.74);
+            box-shadow: 0 24px 56px rgba(3, 12, 26, 0.44);
+            transform: translateX(6px);
         }
 
         .quick-action i {
-            width: 34px;
-            height: 34px;
-            border-radius: 11px;
+            position: relative;
+            z-index: 1;
+            width: 48px;
+            height: 48px;
+            flex: 0 0 48px;
+            border-radius: 16px;
             display: grid;
             place-items: center;
-            color: #0f5f58;
-            background: #eef8f6;
+            color: #08345f;
+            background: linear-gradient(135deg, #ffffff, #e8f7ff);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.22);
+            font-size: 1.08rem;
+        }
+
+        .quick-action span {
+            position: relative;
+            z-index: 1;
         }
 
         .quick-action small {
             display: block;
-            color: #607991;
+            margin-bottom: 4px;
+            color: #f5d58f;
             line-height: 1.1;
-            font-size: 0.72rem;
-            font-weight: 700;
+            font-size: 0.74rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
         }
 
         .quick-action strong {
             display: block;
-            line-height: 1.1;
-            font-size: 0.9rem;
-            font-weight: 800;
+            color: #ffffff;
+            line-height: 1.15;
+            font-size: 1.06rem;
+            font-weight: 900;
         }
 
-        .booking-showcase {
-            position: relative;
-            width: min(100%, 1320px);
-            margin: 0 auto;
-            display: grid;
-            align-items: end;
-            min-height: clamp(430px, 48vw, 620px);
-            padding: 0;
-            border-radius: 24px;
-            overflow: hidden;
-            box-shadow: var(--shadow-deep);
-            background: #0d2338;
-        }
-
+                    .booking-showcase {
+                position: relative;
+                width: calc(100vw - 48px);
+                max-width: 1600px;
+                margin: 0 auto;
+                display: grid;
+                align-items: end;
+                min-height: clamp(430px, 48vw, 620px);
+                padding: 0;
+                border-radius: 24px;
+                overflow: hidden;
+                box-shadow: var(--shadow-deep);
+                background: #0d2338;
+            }
         .showcase-room-card,
         .showcase-search-card {
             overflow: hidden;
@@ -432,7 +424,8 @@
             position: absolute;
             inset: 0;
             background:
-                linear-gradient(180deg, rgba(5, 16, 30, 0.02) 0%, rgba(5, 16, 30, 0.16) 70%, rgba(5, 16, 30, 0.28) 100%);
+                linear-gradient(90deg, rgba(5, 16, 30, 0.66) 0%, rgba(5, 16, 30, 0.36) 38%, rgba(5, 16, 30, 0.05) 72%),
+                linear-gradient(180deg, rgba(5, 16, 30, 0.04) 0%, rgba(5, 16, 30, 0.34) 100%);
             pointer-events: none;
         }
 
@@ -1901,9 +1894,15 @@
 
         @media (max-width: 991px) {
             .booking-showcase {
-                min-height: auto;
-                padding: 240px 18px 18px;
+                min-height: 520px;
+                padding: 0;
                 border-radius: 24px;
+            }
+
+            .quick-actions {
+                left: 18px;
+                bottom: 18px;
+                width: min(390px, calc(100% - 36px));
             }
 
             .showcase-room-card,
@@ -1999,8 +1998,42 @@
             }
 
             .booking-showcase {
-                padding: 230px 12px 12px;
+                min-height: 460px;
+                padding: 0;
                 border-radius: 20px;
+            }
+
+            .quick-actions {
+                left: 14px;
+                right: 14px;
+                bottom: 14px;
+                width: auto;
+                gap: 8px;
+            }
+
+            .quick-action {
+                min-height: 62px;
+                border-radius: 16px;
+                padding: 10px 12px;
+            }
+
+            .quick-action:hover {
+                transform: translateY(-3px);
+            }
+
+            .quick-action i {
+                width: 40px;
+                height: 40px;
+                flex-basis: 40px;
+                border-radius: 13px;
+            }
+
+            .quick-action small {
+                font-size: 0.66rem;
+            }
+
+            .quick-action strong {
+                font-size: 0.92rem;
             }
 
             .showcase-room-copy {
@@ -2393,6 +2426,71 @@
                 <img class="showcase-room-image" src="{{ $anhPhongNoiBat }}" alt="{{ $tenPhongNoiBat }}">
             </article>
 
+        <nav class="quick-actions" aria-label="Lối tắt đặt phòng">
+            @auth
+                @if(auth()->user()->vai_tro === 'khach_hang')
+                    <a href="{{ route('booking.account') }}" class="quick-action">
+                        <i class="fa-solid fa-user-check"></i>
+                        <span>
+                            <small>Quản lý</small>
+                            <strong>Tài khoản</strong>
+                        </span>
+                    </a>
+                    <a href="{{ route('booking.payments') }}" class="quick-action">
+                        <i class="fa-solid fa-credit-card"></i>
+                        <span>
+                            <small>Theo dõi</small>
+                            <strong>Thanh toán</strong>
+                        </span>
+                    </a>
+                    <a href="#booking-form" class="quick-action">
+                        <i class="fa-solid fa-bell"></i>
+                        <span>
+                            <small>Tạo mới</small>
+                            <strong>Đặt phòng</strong>
+                        </span>
+                    </a>
+                @else
+                    <a href="{{ route('dashboard') }}" class="quick-action">
+                        <i class="fa-solid fa-chart-line"></i>
+                        <span>
+                            <small>Nội bộ</small>
+                            <strong>Trang quản trị</strong>
+                        </span>
+                    </a>
+                    <a href="{{ route('dat-phong.index') }}" class="quick-action">
+                        <i class="fa-solid fa-calendar-check"></i>
+                        <span>
+                            <small>Quản lý</small>
+                            <strong>Đặt phòng</strong>
+                        </span>
+                    </a>
+                @endif
+            @else
+                <a href="#booking-form" class="quick-action">
+                    <i class="fa-solid fa-bed"></i>
+                    <span>
+                        <small>Khám phá</small>
+                        <strong>Chọn phòng</strong>
+                    </span>
+                </a>
+                <a href="{{ route('booking.index', ['sap_xep' => 'gia_tang']) }}" class="quick-action">
+                    <i class="fa-solid fa-tags"></i>
+                    <span>
+                        <small>Ưu tiên</small>
+                        <strong>Giá tốt</strong>
+                    </span>
+                </a>
+                <a href="{{ route('booking.index', ['co_anh' => 1]) }}" class="quick-action">
+                    <i class="fa-regular fa-images"></i>
+                    <span>
+                        <small>Bộ lọc</small>
+                        <strong>Có hình ảnh</strong>
+                    </span>
+                </a>
+            @endauth
+        </nav>
+
             <section class="showcase-search-card" id="bookingSearchPanel" aria-hidden="true" aria-label="Bảng tìm kiếm phòng">
                 <div class="showcase-search-head">
                     <div>
@@ -2605,70 +2703,7 @@
             </section>
         </section>
 
-        <nav class="quick-actions" aria-label="Lối tắt đặt phòng">
-            @auth
-                @if(auth()->user()->vai_tro === 'khach_hang')
-                    <a href="{{ route('booking.account') }}" class="quick-action">
-                        <i class="fa-solid fa-user-check"></i>
-                        <span>
-                            <small>Quản lý</small>
-                            <strong>Tài khoản</strong>
-                        </span>
-                    </a>
-                    <a href="{{ route('booking.payments') }}" class="quick-action">
-                        <i class="fa-solid fa-credit-card"></i>
-                        <span>
-                            <small>Theo dõi</small>
-                            <strong>Thanh toán</strong>
-                        </span>
-                    </a>
-                    <a href="#booking-form" class="quick-action">
-                        <i class="fa-solid fa-bell"></i>
-                        <span>
-                            <small>Tạo mới</small>
-                            <strong>Đặt phòng</strong>
-                        </span>
-                    </a>
-                @else
-                    <a href="{{ route('dashboard') }}" class="quick-action">
-                        <i class="fa-solid fa-chart-line"></i>
-                        <span>
-                            <small>Nội bộ</small>
-                            <strong>Trang quản trị</strong>
-                        </span>
-                    </a>
-                    <a href="{{ route('dat-phong.index') }}" class="quick-action">
-                        <i class="fa-solid fa-calendar-check"></i>
-                        <span>
-                            <small>Quản lý</small>
-                            <strong>Đặt phòng</strong>
-                        </span>
-                    </a>
-                @endif
-            @else
-                <a href="#booking-form" class="quick-action">
-                    <i class="fa-solid fa-bed"></i>
-                    <span>
-                        <small>Khám phá</small>
-                        <strong>Chọn phòng</strong>
-                    </span>
-                </a>
-                <a href="{{ route('booking.index', ['sap_xep' => 'gia_tang']) }}" class="quick-action">
-                    <i class="fa-solid fa-tags"></i>
-                    <span>
-                        <small>Ưu tiên</small>
-                        <strong>Giá tốt</strong>
-                    </span>
-                </a>
-                <a href="{{ route('booking.index', ['co_anh' => 1]) }}" class="quick-action">
-                    <i class="fa-regular fa-images"></i>
-                    <span>
-                        <small>Bộ lọc</small>
-                        <strong>Có hình ảnh</strong>
-                    </span>
-                </a>
-            @endauth
-        </nav>
+
 
         @if(session('success') && !session('auth_modal'))
             <div class="alert alert-success js-auto-dismiss-alert" data-auto-dismiss="5000">{{ session('success') }}</div>
