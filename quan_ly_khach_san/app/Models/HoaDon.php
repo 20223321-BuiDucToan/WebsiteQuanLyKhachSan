@@ -58,14 +58,16 @@ class HoaDon extends Model
     {
         $this->loadMissing('datPhong.chiTietDatPhong');
 
-        return $this->datPhong ? $this->datPhong->tinhTongTienPhong() : 0;
+        return $this->datPhong
+            ? $this->datPhong->tinhTongTienPhongTheoNghiepVu($this->tinhTongTienDaThu())
+            : 0;
     }
 
     public function tinhTongTienDichVuTuDatPhong(): float
     {
         $this->loadMissing('datPhong.suDungDichVu');
 
-        return $this->datPhong ? $this->datPhong->tinhTongTienDichVu() : 0;
+        return $this->datPhong ? $this->datPhong->tinhTongTienDichVuTheoNghiepVu() : 0;
     }
 
     public function tinhTongTienDaThu(): float

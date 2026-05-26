@@ -24,7 +24,7 @@ class DichVuVanHanhTest extends TestCase
         $response = $this->actingAs($admin)->get(route('dich-vu.index'));
 
         $response->assertOk();
-        $response->assertSee('Quan ly dich vu');
+        $response->assertSee('Quản lý dịch vụ');
     }
 
     public function test_recording_service_usage_syncs_existing_invoice_total(): void

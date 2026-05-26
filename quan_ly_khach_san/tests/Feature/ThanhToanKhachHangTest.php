@@ -25,9 +25,10 @@ class ThanhToanKhachHangTest extends TestCase
             ->actingAs($taiKhoanKhach)
             ->post(route('booking.thanh-toan.store', $hoaDon), [
                 'so_tien' => 300000,
+                'loai_yeu_cau' => 'thanh_toan_them',
                 'phuong_thuc_thanh_toan' => 'chuyen_khoan',
                 'ma_tham_chieu' => 'BANK-001',
-                'ghi_chu' => 'Da chuyen khoan dat coc',
+                'ghi_chu' => 'Da chuyen khoan thanh toan mot phan',
             ]);
 
         $response->assertRedirect(route('booking.hoa-don.show', $hoaDon));
@@ -46,6 +47,50 @@ class ThanhToanKhachHangTest extends TestCase
             'id' => $hoaDon->id,
             'trang_thai' => 'chua_thanh_toan',
         ]);
+    }
+
+    public function test_customer_can_submit_room_deposit_request_for_eligible_invoice(): void
+    {
+        [$taiKhoanKhach, $khachHang] = $this->taoKhachHangCoTaiKhoan();
+        $hoaDon = $this->taoHoaDonChoKhachHang($taiKhoanKhach, $khachHang, 2);
+
+        $response = $this->from(route('booking.hoa-don.show', ['hoaDon' => $hoaDon, 'che_do' => 'coc']))
+            ->actingAs($taiKhoanKhach)
+            ->post(route('booking.thanh-toan.store', $hoaDon), [
+                'so_tien' => 1000000,
+                'loai_yeu_cau' => 'coc_phong',
+                'phuong_thuc_thanh_toan' => 'chuyen_khoan',
+                'ma_tham_chieu' => 'DEPOSIT-001',
+                'ghi_chu' => 'Da chuyen khoan dat coc',
+            ]);
+
+        $response->assertRedirect(route('booking.hoa-don.show', $hoaDon));
+
+        $thanhToan = ThanhToan::query()->where('hoa_don_id', $hoaDon->id)->latest('id')->first();
+
+        $this->assertNotNull($thanhToan);
+        $this->assertSame('cho_xu_ly', $thanhToan->trang_thai);
+        $this->assertSame(ThanhToan::NGUON_TAO_KHACH_HANG, $thanhToan->nguon_tao);
+        $this->assertSame(1000000.0, (float) $thanhToan->so_tien);
+        $this->assertStringContainsString('[Cọc phòng]', (string) $thanhToan->ghi_chu);
+    }
+
+    public function test_customer_cannot_submit_room_deposit_above_remaining_suggested_deposit(): void
+    {
+        [$taiKhoanKhach, $khachHang] = $this->taoKhachHangCoTaiKhoan();
+        $hoaDon = $this->taoHoaDonChoKhachHang($taiKhoanKhach, $khachHang, 2);
+
+        $response = $this->from(route('booking.hoa-don.show', ['hoaDon' => $hoaDon, 'che_do' => 'coc']))
+            ->actingAs($taiKhoanKhach)
+            ->post(route('booking.thanh-toan.store', $hoaDon), [
+                'so_tien' => 1500000,
+                'loai_yeu_cau' => 'coc_phong',
+                'phuong_thuc_thanh_toan' => 'chuyen_khoan',
+            ]);
+
+        $response->assertRedirect(route('booking.hoa-don.show', ['hoaDon' => $hoaDon, 'che_do' => 'coc']));
+        $response->assertSessionHasErrors('so_tien');
+        $this->assertDatabaseCount('thanh_toan', 0);
     }
 
     public function test_customer_cannot_submit_payment_request_beyond_remaining_after_pending_requests(): void
@@ -69,12 +114,26 @@ class ThanhToanKhachHangTest extends TestCase
             ->actingAs($taiKhoanKhach)
             ->post(route('booking.thanh-toan.store', $hoaDon), [
                 'so_tien' => 400000,
+                'loai_yeu_cau' => 'thanh_toan_them',
                 'phuong_thuc_thanh_toan' => 'chuyen_khoan',
             ]);
 
         $response->assertRedirect(route('booking.hoa-don.show', $hoaDon));
         $response->assertSessionHasErrors('so_tien');
         $this->assertDatabaseCount('thanh_toan', 1);
+    }
+
+    public function test_customer_payment_page_shows_room_deposit_call_to_action_for_eligible_invoice(): void
+    {
+        [$taiKhoanKhach, $khachHang] = $this->taoKhachHangCoTaiKhoan();
+        $hoaDon = $this->taoHoaDonChoKhachHang($taiKhoanKhach, $khachHang, 2);
+
+        $response = $this->actingAs($taiKhoanKhach)->get(route('booking.payments'));
+
+        $response->assertOk();
+        $response->assertSee('Cọc phòng');
+        $response->assertSee($hoaDon->ma_hoa_don);
+        $response->assertSee('Cọc ngay');
     }
 
     public function test_staff_can_approve_pending_customer_payment_and_sync_invoice(): void
@@ -300,14 +359,16 @@ class ThanhToanKhachHangTest extends TestCase
         return [$taiKhoan, $khachHang];
     }
 
-    private function taoHoaDonChoKhachHang(NguoiDung $nguoiTao, KhachHang $khachHang): HoaDon
+    private function taoHoaDonChoKhachHang(NguoiDung $nguoiTao, KhachHang $khachHang, int $soDem = 1): HoaDon
     {
         $soNgauNhien = random_int(1000, 9999);
+        $giaMotDem = 1000000;
+        $tongTien = $giaMotDem * $soDem;
 
         $loaiPhong = LoaiPhong::query()->create([
             'ma_loai_phong' => 'LP' . $soNgauNhien,
             'ten_loai_phong' => 'Phong thanh toan ' . $soNgauNhien,
-            'gia_mot_dem' => 1000000,
+            'gia_mot_dem' => $giaMotDem,
             'so_nguoi_toi_da' => 2,
             'so_giuong' => 1,
             'so_phong_tam' => 1,
@@ -322,7 +383,7 @@ class ThanhToanKhachHangTest extends TestCase
             'trang_thai' => Phong::TRANG_THAI_DA_DAT,
             'tinh_trang_ve_sinh' => 'sach',
             'tinh_trang_hoat_dong' => 'hoat_dong',
-            'gia_mac_dinh' => 1000000,
+            'gia_mac_dinh' => $giaMotDem,
         ]);
 
         $datPhong = DatPhong::query()->create([
@@ -331,7 +392,7 @@ class ThanhToanKhachHangTest extends TestCase
             'nguoi_tao_id' => $nguoiTao->id,
             'ngay_dat' => now()->subDay(),
             'ngay_nhan_phong_du_kien' => now()->toDateString(),
-            'ngay_tra_phong_du_kien' => now()->addDay()->toDateString(),
+            'ngay_tra_phong_du_kien' => now()->addDays($soDem)->toDateString(),
             'so_nguoi_lon' => 1,
             'so_tre_em' => 0,
             'trang_thai' => DatPhong::TRANG_THAI_DA_XAC_NHAN,
@@ -340,8 +401,8 @@ class ThanhToanKhachHangTest extends TestCase
 
         $datPhong->chiTietDatPhong()->create([
             'phong_id' => $phong->id,
-            'gia_phong' => 1000000,
-            'so_dem' => 1,
+            'gia_phong' => $giaMotDem,
+            'so_dem' => $soDem,
             'so_nguoi_lon' => 1,
             'so_tre_em' => 0,
             'trang_thai' => 'da_dat',
@@ -350,11 +411,11 @@ class ThanhToanKhachHangTest extends TestCase
         return HoaDon::query()->create([
             'ma_hoa_don' => 'HD' . $soNgauNhien,
             'dat_phong_id' => $datPhong->id,
-            'tong_tien_phong' => 1000000,
+            'tong_tien_phong' => $tongTien,
             'tong_tien_dich_vu' => 0,
             'giam_gia' => 0,
             'thue' => 0,
-            'tong_tien' => 1000000,
+            'tong_tien' => $tongTien,
             'trang_thai' => 'chua_thanh_toan',
             'thoi_diem_xuat' => now(),
             'nguoi_tao_id' => $nguoiTao->id,

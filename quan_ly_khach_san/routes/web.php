@@ -22,6 +22,7 @@ Route::post('/dat-phong', [PublicBookingController::class, 'store'])
 
 Route::middleware(['auth', 'kiem_tra_tai_khoan_hoat_dong', 'kiem_tra_vai_tro:khach_hang'])->group(function () {
     Route::get('/tai-khoan', [PublicBookingController::class, 'showTaiKhoan'])->name('booking.account');
+    Route::get('/tai-khoan/thanh-toan', [PublicBookingController::class, 'showThanhToan'])->name('booking.payments');
     Route::patch('/tai-khoan/thong-tin', [PublicBookingController::class, 'updateTaiKhoan'])->name('booking.account.update');
     Route::get('/tai-khoan/hoa-don/{hoaDon}', [PublicBookingController::class, 'showHoaDon'])->name('booking.hoa-don.show');
     Route::post('/tai-khoan/hoa-don/{hoaDon}/thanh-toan', [ThanhToanController::class, 'storeYeuCauKhachHang'])->name('booking.thanh-toan.store');
@@ -34,9 +35,9 @@ Route::middleware('guest')->group(function () {
     Route::post('/dang-ky', [AuthController::class, 'register'])->name('register.post');
 
     Route::get('/quen-mat-khau', [AuthController::class, 'showForgotPassword'])->name('password.request');
-    Route::post('/quen-mat-khau', [AuthController::class, 'sendResetLink'])->name('password.email');
+    Route::post('/quen-mat-khau', [AuthController::class, 'sendResetLink'])->middleware('throttle:5,1')->name('password.email');
     Route::get('/dat-lai-mat-khau/{token}', [AuthController::class, 'showResetPassword'])->name('password.reset');
-    Route::post('/dat-lai-mat-khau', [AuthController::class, 'resetPassword'])->name('password.update');
+    Route::post('/dat-lai-mat-khau', [AuthController::class, 'resetPassword'])->middleware('throttle:6,1')->name('password.update');
 });
 
 Route::match(['get', 'post'], '/dang-xuat', [AuthController::class, 'logout'])

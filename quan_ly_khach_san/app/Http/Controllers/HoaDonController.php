@@ -80,7 +80,12 @@ class HoaDonController extends Controller
     {
         $danhSachDatPhong = DatPhong::query()
             ->with(['khachHang', 'chiTietDatPhong.phong', 'suDungDichVu.dichVu'])
-            ->whereIn('trang_thai', ['da_xac_nhan', 'da_nhan_phong', 'da_tra_phong'])
+            ->whereIn('trang_thai', [
+                DatPhong::TRANG_THAI_DA_XAC_NHAN,
+                DatPhong::TRANG_THAI_DA_NHAN_PHONG,
+                DatPhong::TRANG_THAI_KHONG_DEN,
+                DatPhong::TRANG_THAI_DA_TRA_PHONG,
+            ])
             ->whereDoesntHave('hoaDon', function ($query) {
                 $query->where('trang_thai', '!=', 'da_huy');
             })
@@ -123,9 +128,14 @@ class HoaDonController extends Controller
                 ->with(['chiTietDatPhong', 'hoaDon'])
                 ->findOrFail((int) $duLieu['dat_phong_id']);
 
-            if (!in_array($datPhong->trang_thai, ['da_xac_nhan', 'da_nhan_phong', 'da_tra_phong'], true)) {
+            if (!in_array($datPhong->trang_thai, [
+                DatPhong::TRANG_THAI_DA_XAC_NHAN,
+                DatPhong::TRANG_THAI_DA_NHAN_PHONG,
+                DatPhong::TRANG_THAI_KHONG_DEN,
+                DatPhong::TRANG_THAI_DA_TRA_PHONG,
+            ], true)) {
                 throw ValidationException::withMessages([
-                    'dat_phong_id' => 'Chi duoc tao hoa don cho don dat phong da xac nhan, da nhan phong hoac da tra phong.',
+                    'dat_phong_id' => 'Chi duoc tao hoa don cho don dat phong da xac nhan, da nhan phong, khong den hoac da tra phong.',
                 ]);
             }
 
@@ -287,6 +297,7 @@ class HoaDonController extends Controller
         $trangThaiHienThi = $this->xacDinhTrangThaiHienThi($hoaDon, $soTienDaThu);
 
         $ngayDenHanThu = $hoaDon->datPhong?->ngay_tra_phong_thuc_te
+            ?? $hoaDon->datPhong?->thoi_diem_khong_den
             ?? $hoaDon->datPhong?->ngay_tra_phong_du_kien
             ?? $hoaDon->thoi_diem_xuat;
 
@@ -352,12 +363,12 @@ class HoaDonController extends Controller
 
     private function tinhTongTienPhongTuDatPhong(DatPhong $datPhong): float
     {
-        return $datPhong->tinhTongTienPhong();
+        return $datPhong->tinhTongTienPhongTheoNghiepVu();
     }
 
     private function tinhTongTienDichVuTuDatPhong(DatPhong $datPhong): float
     {
-        return $datPhong->tinhTongTienDichVu();
+        return $datPhong->tinhTongTienDichVuTheoNghiepVu();
     }
 
     private function tinhTongTienThanhCong(HoaDon $hoaDon): float

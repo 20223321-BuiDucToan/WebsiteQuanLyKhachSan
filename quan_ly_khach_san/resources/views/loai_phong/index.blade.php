@@ -139,7 +139,7 @@
                 </div>
 
                 <div class="col-xl-1 d-flex align-items-end">
-                    <a href="{{ route('loai-phong.index') }}" class="btn btn-soft w-100">Reset</a>
+                    <a href="{{ route('loai-phong.index') }}" class="btn btn-soft w-100">Đặt lại</a>
                 </div>
             </form>
         </div>

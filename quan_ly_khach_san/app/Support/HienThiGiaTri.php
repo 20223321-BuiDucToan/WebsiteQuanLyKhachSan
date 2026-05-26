@@ -10,6 +10,7 @@ class HienThiGiaTri
             'cho_xac_nhan' => 'Chờ xác nhận',
             'da_xac_nhan' => 'Đã xác nhận',
             'da_nhan_phong' => 'Đã nhận phòng',
+            'khong_den' => 'Không đến',
             'da_tra_phong' => 'Đã trả phòng',
             'da_huy' => 'Đã hủy',
             'da_dat' => 'Đã đặt',

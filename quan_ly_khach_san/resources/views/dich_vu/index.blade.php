@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Quan ly dich vu')
+@section('title', 'Quản lý dịch vụ')
 
 @push('styles')
     <style>
@@ -67,37 +67,37 @@
         <div class="card-body p-4 p-lg-5">
             <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
                 <div>
-                    <h2 class="section-title">Quan ly dich vu</h2>
-                    <p class="section-subtitle">Xay dung danh muc dich vu phuc vu van hanh va dong bo doanh thu vao hoa don.</p>
+                    <h2 class="section-title">Quản lý dịch vụ</h2>
+                    <p class="section-subtitle">Xây dựng danh mục dịch vụ phục vụ vận hành và đồng bộ doanh thu vào hóa đơn.</p>
                 </div>
 
                 <div class="d-flex flex-wrap gap-2">
                     <a href="{{ route('dich-vu.create') }}" class="btn btn-gradient">
-                        <i class="fa-solid fa-plus me-2"></i>Them dich vu
+                        <i class="fa-solid fa-plus me-2"></i>Thêm dịch vụ
                     </a>
                 </div>
             </div>
 
             <div class="hero-stat-grid">
                 <div class="hero-stat-card">
-                    <div class="hero-stat-label">Tong dich vu</div>
+                    <div class="hero-stat-label">Tổng dịch vụ</div>
                     <div class="hero-stat-value">{{ $thongKe['tong'] }}</div>
-                    <div class="hero-stat-note">Toan bo dich vu dang co trong he thong</div>
+                    <div class="hero-stat-note">Toàn bộ dịch vụ đang có trong hệ thống</div>
                 </div>
                 <div class="hero-stat-card">
-                    <div class="hero-stat-label">Hoat dong</div>
+                    <div class="hero-stat-label">Hoạt động</div>
                     <div class="hero-stat-value">{{ $thongKe['hoat_dong'] }}</div>
-                    <div class="hero-stat-note">Co the chon de ghi nhan vao don dat phong</div>
+                    <div class="hero-stat-note">Có thể chọn để ghi nhận vào đơn đặt phòng</div>
                 </div>
                 <div class="hero-stat-card">
-                    <div class="hero-stat-label">Tam ngung</div>
+                    <div class="hero-stat-label">Tạm ngưng</div>
                     <div class="hero-stat-value">{{ $thongKe['tam_ngung'] }}</div>
-                    <div class="hero-stat-note">Tam khoa de tranh tiep tuc ban nham</div>
+                    <div class="hero-stat-note">Tạm khóa để tránh tiếp tục bán nhầm</div>
                 </div>
                 <div class="hero-stat-card">
-                    <div class="hero-stat-label">Da phat sinh</div>
+                    <div class="hero-stat-label">Đã phát sinh</div>
                     <div class="hero-stat-value">{{ $thongKe['da_phat_sinh'] }}</div>
-                    <div class="hero-stat-note">Da co lich su su dung thuc te trong van hanh</div>
+                    <div class="hero-stat-note">Đã có lịch sử sử dụng thực tế trong vận hành</div>
                 </div>
             </div>
         </div>
@@ -107,14 +107,14 @@
         <div class="card-body p-4">
             <form method="GET" class="row g-3 align-items-end">
                 <div class="col-xl-4">
-                    <label class="form-label">Tu khoa</label>
-                    <input type="text" name="tu_khoa" class="form-control" value="{{ $tuKhoa }}" placeholder="Ma dich vu, ten dich vu, loai dich vu">
+                    <label class="form-label">Từ khóa</label>
+                    <input type="text" name="tu_khoa" class="form-control" value="{{ $tuKhoa }}" placeholder="Mã dịch vụ, tên dịch vụ, loại dịch vụ">
                 </div>
 
                 <div class="col-xl-3">
-                    <label class="form-label">Loai dich vu</label>
+                    <label class="form-label">Loại dịch vụ</label>
                     <select name="loai_dich_vu" class="form-select">
-                        <option value="">Tat ca</option>
+                        <option value="">Tất cả</option>
                         @foreach($danhSachLoaiDichVu as $loai)
                             <option value="{{ $loai }}" @selected($loaiDichVu === $loai)>{{ $loai }}</option>
                         @endforeach
@@ -124,18 +124,18 @@
                 <div class="col-xl-3">
                     <label class="form-label">Trạng thái</label>
                     <select name="trang_thai" class="form-select">
-                        <option value="">Tat ca</option>
-                        <option value="hoat_dong" @selected($trangThai === 'hoat_dong')>Hoat dong</option>
-                        <option value="tam_ngung" @selected($trangThai === 'tam_ngung')>Tam ngung</option>
+                        <option value="">Tất cả</option>
+                        <option value="hoat_dong" @selected($trangThai === 'hoat_dong')>Hoạt động</option>
+                        <option value="tam_ngung" @selected($trangThai === 'tam_ngung')>Tạm ngưng</option>
                     </select>
                 </div>
 
                 <div class="col-xl-1 d-flex align-items-end">
-                    <button type="submit" class="btn btn-gradient w-100">Loc</button>
+                    <button type="submit" class="btn btn-gradient w-100">Lọc</button>
                 </div>
 
                 <div class="col-xl-1 d-flex align-items-end">
-                    <a href="{{ route('dich-vu.index') }}" class="btn btn-soft w-100">Reset</a>
+                    <a href="{{ route('dich-vu.index') }}" class="btn btn-soft w-100">Đặt lại</a>
                 </div>
             </form>
         </div>
@@ -145,8 +145,8 @@
         <div class="card-body p-4">
             <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
                 <div>
-                    <h5 class="fw-bold mb-1">Danh sach dich vu</h5>
-                    <div class="text-muted small">{{ $danhSachDichVu->total() }} dich vu phu hop voi bo loc hien tai</div>
+                    <h5 class="fw-bold mb-1">Danh sách dịch vụ</h5>
+                    <div class="text-muted small">{{ $danhSachDichVu->total() }} dịch vụ phù hợp với bộ lọc hiện tại</div>
                 </div>
             </div>
 
@@ -154,12 +154,12 @@
                 <table class="table align-middle">
                     <thead>
                         <tr>
-                            <th>Dich vu</th>
-                            <th>Loai</th>
-                            <th>Gia ban</th>
+                            <th>Dịch vụ</th>
+                            <th>Loại</th>
+                            <th>Giá bán</th>
                             <th>Trạng thái</th>
-                            <th>Phat sinh</th>
-                            <th class="text-end">Thao tac</th>
+                            <th>Phát sinh</th>
+                            <th class="text-end">Thao tác</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -175,21 +175,21 @@
                                 <td>{{ $dichVu->loai_dich_vu ?: '-' }}</td>
                                 <td class="fw-semibold">{{ number_format((float) $dichVu->don_gia, 0, ',', '.') }} VNĐ / {{ $dichVu->don_vi_tinh }}</td>
                                 <td><span class="{{ $chipTrangThai }}">{{ \App\Support\HienThiGiaTri::nhanGiaTri($dichVu->trang_thai) }}</span></td>
-                                <td>{{ $dichVu->su_dung_dich_vu_count }} lan</td>
+                                <td>{{ $dichVu->su_dung_dich_vu_count }} lần</td>
                                 <td class="text-end">
                                     <div class="d-inline-flex gap-2">
-                                        <a href="{{ route('dich-vu.edit', $dichVu) }}" class="btn btn-sm btn-outline-primary">Sua</a>
-                                        <form method="POST" action="{{ route('dich-vu.destroy', $dichVu) }}" onsubmit="return confirm('Ban co chac muon xoa dich vu nay?')">
+                                        <a href="{{ route('dich-vu.edit', $dichVu) }}" class="btn btn-sm btn-outline-primary">Sửa</a>
+                                        <form method="POST" action="{{ route('dich-vu.destroy', $dichVu) }}" onsubmit="return confirm('Bạn có chắc muốn xóa dịch vụ này?')">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-outline-danger">Xoa</button>
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">Xóa</button>
                                         </form>
                                     </div>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="text-center text-muted py-4">Chua co dich vu nao trong danh muc.</td>
+                                <td colspan="6" class="text-center text-muted py-4">Chưa có dịch vụ nào trong danh mục.</td>
                             </tr>
                         @endforelse
                     </tbody>

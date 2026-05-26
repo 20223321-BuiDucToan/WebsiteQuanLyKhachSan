@@ -14,6 +14,7 @@ class DatPhong extends Model
     public const TRANG_THAI_CHO_XAC_NHAN = 'cho_xac_nhan';
     public const TRANG_THAI_DA_XAC_NHAN = 'da_xac_nhan';
     public const TRANG_THAI_DA_NHAN_PHONG = 'da_nhan_phong';
+    public const TRANG_THAI_KHONG_DEN = 'khong_den';
     public const TRANG_THAI_DA_TRA_PHONG = 'da_tra_phong';
     public const TRANG_THAI_DA_HUY = 'da_huy';
 
@@ -21,6 +22,7 @@ class DatPhong extends Model
         self::TRANG_THAI_CHO_XAC_NHAN,
         self::TRANG_THAI_DA_XAC_NHAN,
         self::TRANG_THAI_DA_NHAN_PHONG,
+        self::TRANG_THAI_KHONG_DEN,
         self::TRANG_THAI_DA_TRA_PHONG,
         self::TRANG_THAI_DA_HUY,
     ];
@@ -32,11 +34,13 @@ class DatPhong extends Model
         ],
         self::TRANG_THAI_DA_XAC_NHAN => [
             self::TRANG_THAI_DA_NHAN_PHONG,
+            self::TRANG_THAI_KHONG_DEN,
             self::TRANG_THAI_DA_HUY,
         ],
         self::TRANG_THAI_DA_NHAN_PHONG => [
             self::TRANG_THAI_DA_TRA_PHONG,
         ],
+        self::TRANG_THAI_KHONG_DEN => [],
         self::TRANG_THAI_DA_TRA_PHONG => [],
         self::TRANG_THAI_DA_HUY => [],
     ];
@@ -52,6 +56,9 @@ class DatPhong extends Model
         'ngay_tra_phong_du_kien',
         'ngay_nhan_phong_thuc_te',
         'ngay_tra_phong_thuc_te',
+        'thoi_diem_khong_den',
+        'phi_khong_den',
+        'ly_do_khong_den',
         'so_nguoi_lon',
         'so_tre_em',
         'trang_thai',
@@ -68,6 +75,8 @@ class DatPhong extends Model
             'ngay_tra_phong_du_kien' => 'date',
             'ngay_nhan_phong_thuc_te' => 'datetime',
             'ngay_tra_phong_thuc_te' => 'datetime',
+            'thoi_diem_khong_den' => 'datetime',
+            'phi_khong_den' => 'decimal:2',
         ];
     }
 
@@ -105,11 +114,66 @@ class DatPhong extends Model
         });
     }
 
+    public function tinhTienDemDau(): float
+    {
+        $this->loadMissing('chiTietDatPhong');
+
+        return (float) $this->chiTietDatPhong->sum(function (ChiTietDatPhong $chiTiet) {
+            return (float) $chiTiet->gia_phong;
+        });
+    }
+
+    public function tinhTienCocGoiY(): float
+    {
+        $tongTienPhong = $this->tinhTongTienPhong();
+
+        if ($tongTienPhong <= 0) {
+            return 0;
+        }
+
+        return min($tongTienPhong, max(0, $this->tinhTienDemDau()));
+    }
+
+    public function tinhPhiKhongDenMacDinh(float $soTienDaThu = 0): float
+    {
+        $tongTienPhong = $this->tinhTongTienPhong();
+
+        if ($tongTienPhong <= 0) {
+            return 0;
+        }
+
+        return min($tongTienPhong, max($this->tinhTienCocGoiY(), $soTienDaThu));
+    }
+
+    public function tinhTongTienPhongTheoNghiepVu(float $soTienDaThu = 0): float
+    {
+        if ($this->trang_thai !== self::TRANG_THAI_KHONG_DEN) {
+            return $this->tinhTongTienPhong();
+        }
+
+        $phiKhongDen = (float) $this->phi_khong_den;
+
+        if ($phiKhongDen > 0) {
+            return min($this->tinhTongTienPhong(), $phiKhongDen);
+        }
+
+        return $this->tinhPhiKhongDenMacDinh($soTienDaThu);
+    }
+
     public function tinhTongTienDichVu(): float
     {
         $this->loadMissing('suDungDichVu');
 
         return (float) $this->suDungDichVu->sum('thanh_tien');
+    }
+
+    public function tinhTongTienDichVuTheoNghiepVu(): float
+    {
+        if ($this->trang_thai === self::TRANG_THAI_KHONG_DEN) {
+            return 0;
+        }
+
+        return $this->tinhTongTienDichVu();
     }
 
     public static function layTrangThaiKeTiepHopLe(string $trangThaiHienTai): array

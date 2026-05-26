@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Tài khoản khách hàng')
+@section('title', 'Thông tin khách hàng')
 
 @push('styles')
     <style>
@@ -113,23 +113,61 @@
             color: #0f5f92;
         }
 
-        .missing-list {
+        .missing-list,
+        .quick-summary {
             display: flex;
             flex-wrap: wrap;
             gap: 8px;
         }
 
-        .missing-tag {
+        .missing-tag,
+        .quick-summary-item {
             border-radius: 999px;
             padding: 6px 10px;
-            background: #fff7ed;
-            color: #b45309;
             font-size: 0.82rem;
             font-weight: 600;
         }
 
-        .section-anchor {
-            scroll-margin-top: 90px;
+        .missing-tag {
+            background: #fff7ed;
+            color: #b45309;
+        }
+
+        .quick-summary-item {
+            background: #eef6ff;
+            color: #1d4f7a;
+        }
+
+        .notice-list,
+        .booking-list {
+            display: grid;
+            gap: 14px;
+        }
+
+        .notice-item,
+        .booking-item {
+            border: 1px solid #dce7f2;
+            border-radius: 16px;
+            padding: 16px;
+            background: #fbfdff;
+        }
+
+        .notice-meta,
+        .booking-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            color: #68839f;
+            font-size: 0.84rem;
+            margin-top: 8px;
+        }
+
+        .empty-state {
+            border: 1px dashed #cddbeb;
+            border-radius: 16px;
+            padding: 18px;
+            background: #f9fbfe;
+            color: #68839f;
         }
 
         @media (max-width: 767px) {
@@ -149,15 +187,15 @@
     <section class="account-hero mb-4">
         <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
             <div>
-                <h1 class="h3 mb-2">Tài khoản khách hàng</h1>
+                <h1 class="h3 mb-2">Thông tin khách hàng</h1>
                 <p class="text-muted mb-0">
-                    Quản lý hồ sơ cá nhân, bổ sung thông tin lưu trú và theo dõi toàn bộ hóa đơn, thanh toán của bạn.
+                    Hồ sơ và thông tin lưu trú.
                 </p>
             </div>
 
             <div class="d-flex flex-wrap gap-2">
                 <a href="{{ route('booking.index') }}" class="btn btn-outline-secondary rounded-3">Đặt phòng</a>
-                <a href="{{ route('booking.account') }}#payment-section" class="btn btn-brand rounded-3">Xem thanh toán</a>
+                <a href="{{ route('booking.payments') }}" class="btn btn-brand rounded-3">Thanh toán của tôi</a>
             </div>
         </div>
 
@@ -165,36 +203,33 @@
             <div class="account-stat-card">
                 <div class="account-stat-label">Hồ sơ</div>
                 <div class="account-stat-value">{{ $thongKe['phan_tram_ho_so'] }}%</div>
-                <div class="small text-muted mt-2">Mức độ đầy đủ thông tin khách hàng</div>
+                <div class="small text-muted mt-2">Độ đầy đủ hồ sơ</div>
             </div>
             <div class="account-stat-card">
                 <div class="account-stat-label">Đơn đặt phòng</div>
                 <div class="account-stat-value">{{ $thongKe['tong_luot_dat'] }}</div>
-                <div class="small text-muted mt-2">{{ $thongKe['don_sap_toi'] }} đơn sắp tới hoặc đang lưu trú</div>
-            </div>
-            <div class="account-stat-card">
-                <div class="account-stat-label">Đã thanh toán</div>
-                <div class="account-stat-value text-success">{{ number_format((float) $thongKe['tong_da_thanh_toan'], 0, ',', '.') }} VNĐ</div>
-                <div class="small text-muted mt-2">Tổng đã được ghi nhận thành công</div>
+                <div class="small text-muted mt-2">{{ $thongKe['don_sap_toi'] }} đơn sắp tới</div>
             </div>
             <div class="account-stat-card">
                 <div class="account-stat-label">Chờ đối soát</div>
                 <div class="account-stat-value text-warning">{{ number_format($tongTienChoXuLy, 0, ',', '.') }} VNĐ</div>
-                <div class="small text-muted mt-2">Giao dịch đã gửi và đang chờ nội bộ xác nhận</div>
+                <div class="small text-muted mt-2">Giao dịch chờ xác nhận</div>
             </div>
             <div class="account-stat-card">
                 <div class="account-stat-label">Công nợ còn lại</div>
-                <div class="account-stat-value {{ $tongTienConLai > 0 ? 'text-danger' : 'text-success' }}">{{ number_format($tongTienConLai, 0, ',', '.') }} VNĐ</div>
-                <div class="small text-muted mt-2">Tổng cần thanh toán trên các hóa đơn</div>
+                <div class="account-stat-value {{ $tongTienConLai > 0 ? 'text-danger' : 'text-success' }}">
+                    {{ number_format($tongTienConLai, 0, ',', '.') }} VNĐ
+                </div>
+                <div class="small text-muted mt-2">Chưa thanh toán</div>
             </div>
         </div>
     </section>
 
-    <div class="row g-4 mb-4 section-anchor" id="customer-info-section">
+    <div class="row g-4 mb-4">
         <div class="col-xl-5">
             <section class="account-panel">
-                <div class="account-panel-title">Thông tin khách hàng</div>
-                <div class="account-panel-subtitle">Phần xem thông tin hiện tại của bạn trong hệ thống.</div>
+                <div class="account-panel-title">Thông tin hiện tại</div>
+                <div class="account-panel-subtitle">Thông tin đang lưu trên hệ thống.</div>
 
                 <div class="d-flex flex-wrap gap-2 mb-3">
                     <span class="account-chip account-chip--info">{{ \App\Support\HienThiGiaTri::nhanGiaTri($khachHang->hang_khach_hang) }}</span>
@@ -269,7 +304,7 @@
         <div class="col-xl-7">
             <section class="account-panel">
                 <div class="account-panel-title">Sửa và bổ sung thông tin</div>
-                <div class="account-panel-subtitle">Bạn có thể cập nhật hồ sơ cá nhân để thủ tục nhận phòng và đối soát thanh toán nhanh hơn.</div>
+                <div class="account-panel-subtitle">Cập nhật hồ sơ cá nhân.</div>
 
                 <form method="POST" action="{{ route('booking.account.update') }}" class="row g-3">
                     @csrf
@@ -332,150 +367,108 @@
 
                     <div class="col-12 d-flex gap-2 flex-wrap">
                         <button type="submit" class="btn btn-brand">Lưu thông tin</button>
-                        <a href="{{ route('booking.account') }}#payment-section" class="btn btn-outline-secondary">Xem thanh toán của tôi</a>
+                        <a href="{{ route('booking.payments') }}" class="btn btn-outline-secondary">Mở trang thanh toán</a>
                     </div>
                 </form>
             </section>
         </div>
     </div>
 
-    <div class="row g-4 section-anchor" id="payment-section">
-        <div class="col-xl-8">
+    <div class="row g-4">
+        <div class="col-xl-5">
             <section class="account-panel">
-                <div class="d-flex flex-wrap justify-content-between gap-3 mb-3">
-                    <div>
-                        <div class="account-panel-title">Thanh toán và hóa đơn của tôi</div>
-                        <div class="account-panel-subtitle">Xem từng hóa đơn, số tiền đã thu, phần đang đối soát và công nợ còn lại.</div>
-                    </div>
-                    <a href="{{ route('booking.account') }}#customer-info-section" class="btn btn-outline-secondary rounded-3">Sửa thông tin</a>
+                <div class="account-panel-title">Khoản cần chú ý</div>
+                <div class="account-panel-subtitle">Hóa đơn còn thiếu hoặc đang chờ xử lý.</div>
+
+                <div class="quick-summary mb-3">
+                    <span class="quick-summary-item">Đã thanh toán {{ number_format((float) $thongKe['tong_da_thanh_toan'], 0, ',', '.') }} VNĐ</span>
+                    <span class="quick-summary-item">Chờ đối soát {{ number_format($tongTienChoXuLy, 0, ',', '.') }} VNĐ</span>
+                    <span class="quick-summary-item">Còn lại {{ number_format($tongTienConLai, 0, ',', '.') }} VNĐ</span>
                 </div>
 
-                <div class="table-responsive">
-                    <table class="table align-middle">
-                        <thead>
-                            <tr>
-                                <th>Hóa đơn</th>
-                                <th>Đơn đặt phòng</th>
-                                <th>Tổng tiền</th>
-                                <th>Đã thu</th>
-                                <th>Chờ đối soát</th>
-                                <th>Còn lại</th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($danhSachHoaDon as $hoaDon)
-                                <tr>
-                                    <td>
+                @if($hoaDonCanChuY->isEmpty())
+                    <div class="empty-state">Chưa có hóa đơn cần xử lý.</div>
+                @else
+                    <div class="notice-list">
+                        @foreach($hoaDonCanChuY as $hoaDon)
+                            <div class="notice-item">
+                                <div class="d-flex flex-wrap justify-content-between gap-2 align-items-start">
+                                    <div>
                                         <div class="fw-semibold">{{ $hoaDon->ma_hoa_don }}</div>
-                                        <div class="small text-muted">{{ \App\Support\HienThiGiaTri::nhanGiaTri($hoaDon->trang_thai) }}</div>
-                                    </td>
-                                    <td>
-                                        <div class="fw-semibold">{{ $hoaDon->datPhong?->ma_dat_phong ?? '-' }}</div>
-                                        <div class="small text-muted">
-                                            @php $phong = $hoaDon->datPhong?->chiTietDatPhong?->first()?->phong; @endphp
-                                            {{ $phong ? 'Phòng ' . $phong->so_phong : 'Không gán phòng' }}
-                                        </div>
-                                    </td>
-                                    <td class="fw-semibold">{{ number_format((float) $hoaDon->tong_tien, 0, ',', '.') }} VNĐ</td>
-                                    <td class="text-success fw-semibold">{{ number_format((float) $hoaDon->so_tien_da_thanh_toan, 0, ',', '.') }} VNĐ</td>
-                                    <td class="text-warning fw-semibold">{{ number_format((float) $hoaDon->so_tien_cho_xu_ly, 0, ',', '.') }} VNĐ</td>
-                                    <td class="fw-semibold {{ (float) $hoaDon->so_tien_con_lai > 0 ? 'text-danger' : 'text-success' }}">
-                                        {{ number_format((float) $hoaDon->so_tien_con_lai, 0, ',', '.') }} VNĐ
-                                    </td>
-                                    <td>
-                                        <a href="{{ route('booking.hoa-don.show', $hoaDon) }}" class="btn btn-sm btn-outline-primary rounded-3">
-                                            {{ (float) $hoaDon->so_tien_con_lai > 0 || (float) $hoaDon->so_tien_cho_xu_ly > 0 ? 'Xem thanh toán' : 'Xem chi tiết' }}
-                                        </a>
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="7" class="text-center text-muted py-4">Bạn chưa có hóa đơn nào.</td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
+                                        <div class="small text-muted">{{ $hoaDon->datPhong?->ma_dat_phong ?? '-' }}</div>
+                                    </div>
+                                    <a href="{{ route('booking.hoa-don.show', ['hoaDon' => $hoaDon, 'che_do' => $hoaDon->co_the_dat_coc ? 'coc' : 'thanh_toan']) }}" class="btn btn-sm btn-outline-primary rounded-3">
+                                        {{ $hoaDon->co_the_dat_coc ? 'Cọc/Thanh toán' : 'Xem hóa đơn' }}
+                                    </a>
+                                </div>
+
+                                <div class="notice-meta">
+                                    <span>Còn lại {{ number_format((float) $hoaDon->so_tien_con_lai, 0, ',', '.') }} VNĐ</span>
+                                    <span>Chờ đối soát {{ number_format((float) $hoaDon->so_tien_cho_xu_ly, 0, ',', '.') }} VNĐ</span>
+                                </div>
+
+                                @if($hoaDon->co_the_dat_coc)
+                                    <div class="small text-info mt-2">
+                                        Còn thiếu cọc {{ number_format((float) $hoaDon->so_tien_con_thieu_coc, 0, ',', '.') }} VNĐ.
+                                    </div>
+                                @endif
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
             </section>
         </div>
 
-        <div class="col-xl-4">
-            <section class="account-panel mb-4">
-                <div class="account-panel-title">Lịch sử giao dịch gần đây</div>
-                <div class="account-panel-subtitle">Theo dõi các giao dịch thanh toán và trạng thái xử lý mới nhất.</div>
-
-                <div class="table-responsive">
-                    <table class="table align-middle mb-0">
-                        <thead>
-                            <tr>
-                                <th>Mã TT</th>
-                                <th>Số tiền</th>
-                                <th>Trạng thái</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($danhSachThanhToan as $thanhToan)
-                                @php
-                                    $mauTrangThai = match ($thanhToan->trang_thai) {
-                                        'thanh_cong' => 'text-success',
-                                        'cho_xu_ly' => 'text-warning',
-                                        'that_bai' => 'text-danger',
-                                        default => 'text-muted',
-                                    };
-                                @endphp
-                                <tr>
-                                    <td>
-                                        <div class="fw-semibold">{{ $thanhToan->ma_thanh_toan }}</div>
-                                        <div class="small text-muted">{{ $thanhToan->hoaDon?->ma_hoa_don ?? '-' }}</div>
-                                    </td>
-                                    <td class="fw-semibold">{{ number_format((float) $thanhToan->so_tien, 0, ',', '.') }} VNĐ</td>
-                                    <td>
-                                        <div class="{{ $mauTrangThai }} fw-semibold">{{ \App\Support\HienThiGiaTri::nhanGiaTri($thanhToan->trang_thai) }}</div>
-                                        <div class="small text-muted">{{ optional($thanhToan->thoi_diem_thanh_toan)->format('d/m/Y H:i') ?? '-' }}</div>
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="3" class="text-center text-muted py-4">Chưa có giao dịch thanh toán.</td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-            </section>
-
+        <div class="col-xl-7">
             <section class="account-panel">
                 <div class="account-panel-title">Đơn đặt phòng gần đây</div>
-                <div class="account-panel-subtitle">Thông tin lưu trú để đối chiếu với hóa đơn và thanh toán.</div>
+                <div class="account-panel-subtitle">Lịch ở gần đây.</div>
 
-                <div class="table-responsive">
-                    <table class="table align-middle mb-0">
-                        <thead>
-                            <tr>
-                                <th>Mã đơn</th>
-                                <th>Lịch ở</th>
-                                <th>Trạng thái</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($danhSachDatPhong as $datPhong)
-                                <tr>
-                                    <td class="fw-semibold">{{ $datPhong->ma_dat_phong }}</td>
-                                    <td>
-                                        {{ optional($datPhong->ngay_nhan_phong_du_kien)->format('d/m/Y') ?? '-' }}
-                                        <div class="small text-muted">{{ optional($datPhong->ngay_tra_phong_du_kien)->format('d/m/Y') ?? '-' }}</div>
-                                    </td>
-                                    <td>{{ \App\Support\HienThiGiaTri::nhanGiaTri($datPhong->trang_thai) }}</td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="3" class="text-center text-muted py-4">Bạn chưa có đơn đặt phòng nào.</td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
+                @if($danhSachDatPhong->isEmpty())
+                    <div class="empty-state">Bạn chưa có đơn đặt phòng nào.</div>
+                @else
+                    <div class="booking-list">
+                        @foreach($danhSachDatPhong as $datPhong)
+                            @php
+                                $hoaDon = $datPhong->hoaDon->where('trang_thai', '!=', 'da_huy')->first();
+                                $phong = $datPhong->chiTietDatPhong->first()?->phong;
+                                $lopCanhBaoTuDong = $datPhong->da_qua_han_tu_dong_xu_ly
+                                    ? 'text-danger'
+                                    : ($datPhong->sap_tu_dong_xu_ly ? 'text-warning' : 'text-muted');
+                            @endphp
+                            <div class="booking-item">
+                                <div class="d-flex flex-wrap justify-content-between gap-3 align-items-start">
+                                    <div>
+                                        <div class="fw-semibold">{{ $datPhong->ma_dat_phong }}</div>
+                                        <div class="small text-muted">
+                                            {{ $phong ? 'Phòng ' . $phong->so_phong : 'Chưa gán phòng' }}
+                                        </div>
+                                    </div>
+                                    @if($hoaDon)
+                                        <a href="{{ route('booking.hoa-don.show', $hoaDon) }}" class="btn btn-sm btn-outline-secondary rounded-3">Mở hóa đơn</a>
+                                    @endif
+                                </div>
+
+                                <div class="booking-meta">
+                                    <span>{{ optional($datPhong->ngay_nhan_phong_du_kien)->format('d/m/Y') ?? '-' }} - {{ optional($datPhong->ngay_tra_phong_du_kien)->format('d/m/Y') ?? '-' }}</span>
+                                    <span>{{ \App\Support\HienThiGiaTri::nhanGiaTri($datPhong->trang_thai) }}</span>
+                                    @if($hoaDon)
+                                        <span>{{ $hoaDon->ma_hoa_don }}</span>
+                                    @endif
+                                </div>
+
+                                @if($datPhong->co_tu_dong_xu_ly_khach_dat)
+                                    <div class="small mt-2 {{ $lopCanhBaoTuDong }}">
+                                        {{ $datPhong->hanh_dong_tu_dong_xu_ly }} lúc {{ optional($datPhong->han_tu_dong_xu_ly)->format('H:i d/m/Y') }}.
+                                    </div>
+                                    <div class="small {{ $lopCanhBaoTuDong }}">
+                                        {{ $datPhong->mo_ta_thoi_gian_tu_dong_xu_ly }}
+                                    </div>
+                                @endif
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
             </section>
         </div>
     </div>

@@ -121,7 +121,11 @@
                                 @forelse($danhSachCanXuLy as $datPhong)
                                     @php
                                         $phong = $datPhong->chiTietDatPhong->first()?->phong;
-                                        $chip = $datPhong->trang_thai === 'cho_xac_nhan' ? 'chip chip-warning' : 'chip chip-info';
+                                        $chip = match ($datPhong->trang_thai) {
+                                            'cho_xac_nhan' => 'chip chip-warning',
+                                            'khong_den' => 'chip chip-danger',
+                                            default => 'chip chip-info',
+                                        };
                                     @endphp
                                     <tr>
                                         <td class="fw-bold">{{ $datPhong->ma_dat_phong }}</td>

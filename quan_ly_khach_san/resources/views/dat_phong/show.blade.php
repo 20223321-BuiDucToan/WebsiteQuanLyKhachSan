@@ -126,6 +126,7 @@
             'cho_xac_nhan' => 'chip chip-warning',
             'da_xac_nhan' => 'chip chip-info',
             'da_nhan_phong' => 'chip chip-neutral',
+            'khong_den' => 'chip chip-danger',
             'da_tra_phong' => 'chip chip-success',
             'da_huy' => 'chip chip-danger',
         ];
@@ -136,25 +137,28 @@
             : ($datPhong->muc_do_uu_tien === 'trung_binh' ? 'chip chip-warning' : 'chip chip-neutral');
         $hanhDongTheoTrangThai = [
             'cho_xac_nhan' => [
-                ['trang_thai' => 'da_xac_nhan', 'label' => 'Xac nhan don', 'class' => 'btn-gradient'],
+                ['trang_thai' => 'da_xac_nhan', 'label' => 'Xác nhận đơn', 'class' => 'btn-gradient'],
                 ['trang_thai' => 'da_huy', 'label' => 'Hủy đơn', 'class' => 'btn-outline-danger'],
             ],
             'da_xac_nhan' => [
-                ['trang_thai' => 'da_nhan_phong', 'label' => 'Nhan phong', 'class' => 'btn-gradient'],
+                ['trang_thai' => 'da_nhan_phong', 'label' => 'Nhận phòng', 'class' => 'btn-gradient'],
+                ['trang_thai' => 'khong_den', 'label' => 'Đánh dấu không đến', 'class' => 'btn-outline-warning'],
                 ['trang_thai' => 'da_huy', 'label' => 'Hủy đơn', 'class' => 'btn-outline-danger'],
             ],
             'da_nhan_phong' => [
-                ['trang_thai' => 'da_tra_phong', 'label' => 'Tra phong', 'class' => 'btn-gradient'],
+                ['trang_thai' => 'da_tra_phong', 'label' => 'Trả phòng', 'class' => 'btn-gradient'],
             ],
+            'khong_den' => [],
             'da_tra_phong' => [],
             'da_huy' => [],
         ];
         $hanhDongXuLy = $hanhDongTheoTrangThai[$datPhong->trang_thai] ?? [];
         $tieuDeXuLy = match ($datPhong->trang_thai) {
-            'cho_xac_nhan', 'da_xac_nhan', 'da_nhan_phong' => 'Xu ly tiep theo',
-            'da_tra_phong' => 'Hoan tat',
-            'da_huy' => 'Da dung',
-            default => 'Xu ly',
+            'cho_xac_nhan', 'da_xac_nhan', 'da_nhan_phong' => 'Xử lý tiếp theo',
+            'khong_den' => 'No-show đã xử lý',
+            'da_tra_phong' => 'Hoàn tất',
+            'da_huy' => 'Đã dừng',
+            default => 'Xử lý',
         };
     @endphp
 
@@ -424,8 +428,8 @@
                                         <td>{{ $suDungDichVu->nguoiTao?->ho_ten ?? '-' }}</td>
                                         <td class="text-end">
                                             <div class="d-inline-flex gap-2">
-                                                <button type="submit" form="{{ $formCapNhatId }}" class="btn btn-sm btn-outline-primary" @disabled(!$coTheCapNhatDichVu)>Luu</button>
-                                                <button type="submit" form="{{ $formXoaId }}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Ban co chac muon xoa dong dich vu nay?')" @disabled(!$coTheCapNhatDichVu)>Xoa</button>
+                                                <button type="submit" form="{{ $formCapNhatId }}" class="btn btn-sm btn-outline-primary" @disabled(!$coTheCapNhatDichVu)>Lưu</button>
+                                                <button type="submit" form="{{ $formXoaId }}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Bạn có chắc muốn xóa dòng dịch vụ này?')" @disabled(!$coTheCapNhatDichVu)>Xóa</button>
                                             </div>
                                         </td>
                                     </tr>
@@ -484,11 +488,11 @@
                         <span class="fw-semibold">{{ optional($datPhong->ngay_tra_phong_du_kien)->format('d/m/Y') ?? '-' }}</span>
                     </div>
                     <div class="summary-row">
-                        <span class="text-muted">Nhan phong thuc te</span>
+                        <span class="text-muted">Nhận phòng thực tế</span>
                         <span class="fw-semibold">{{ optional($datPhong->ngay_nhan_phong_thuc_te)->format('d/m/Y H:i') ?? '-' }}</span>
                     </div>
                     <div class="summary-row">
-                        <span class="text-muted">Tra phong thuc te</span>
+                        <span class="text-muted">Trả phòng thực tế</span>
                         <span class="fw-semibold">{{ optional($datPhong->ngay_tra_phong_thuc_te)->format('d/m/Y H:i') ?? '-' }}</span>
                     </div>
                     <div class="summary-row">
@@ -499,6 +503,40 @@
                         <span class="text-muted">Nguon dat</span>
                         <span class="fw-semibold">{{ \App\Support\HienThiGiaTri::nhanGiaTri($datPhong->nguon_dat ?? '-') }}</span>
                     </div>
+                    @if($datPhong->co_tu_dong_xu_ly_khach_dat)
+                        <div class="summary-row">
+                            <span class="text-muted">{{ $datPhong->hanh_dong_tu_dong_xu_ly }}</span>
+                            <span class="fw-semibold {{ $datPhong->da_qua_han_tu_dong_xu_ly ? 'text-danger' : ($datPhong->sap_tu_dong_xu_ly ? 'text-warning' : '') }}">
+                                {{ optional($datPhong->han_tu_dong_xu_ly)->format('H:i d/m/Y') ?? '-' }}
+                            </span>
+                        </div>
+                        <div class="summary-row">
+                            <span class="text-muted">Tiến độ tự xử lý</span>
+                            <span class="fw-semibold {{ $datPhong->da_qua_han_tu_dong_xu_ly ? 'text-danger' : ($datPhong->sap_tu_dong_xu_ly ? 'text-warning' : '') }}">
+                                {{ $datPhong->mo_ta_thoi_gian_tu_dong_xu_ly }}
+                            </span>
+                        </div>
+                    @endif
+                    @if(in_array($datPhong->trang_thai, ['cho_xac_nhan', 'da_xac_nhan'], true) && (float) $datPhong->tong_tien_dat_coc_goi_y > 0)
+                        <div class="summary-row">
+                            <span class="text-muted">Cọc nên thu</span>
+                            <span class="fw-semibold text-primary">{{ number_format((float) $datPhong->tong_tien_dat_coc_goi_y, 0, ',', '.') }} VNĐ</span>
+                        </div>
+                        <div class="summary-row">
+                            <span class="text-muted">Hạn cọc gợi ý</span>
+                            <span class="fw-semibold">{{ optional($datPhong->han_thanh_toan_dat_coc)->format('d/m/Y H:i') ?? '-' }}</span>
+                        </div>
+                    @endif
+                    @if($datPhong->trang_thai === 'khong_den')
+                        <div class="summary-row">
+                            <span class="text-muted">Thời điểm no-show</span>
+                            <span class="fw-semibold">{{ optional($datPhong->thoi_diem_khong_den)->format('d/m/Y H:i') ?? '-' }}</span>
+                        </div>
+                        <div class="summary-row">
+                            <span class="text-muted">Phí no-show</span>
+                            <span class="fw-semibold text-danger">{{ number_format((float) $datPhong->phi_khong_den_hien_tai, 0, ',', '.') }} VNĐ</span>
+                        </div>
+                    @endif
                 </div>
             </div>
 
@@ -543,7 +581,7 @@
 
             <div class="premium-card mb-4">
                 <div class="card-body p-4">
-                    <h5 class="fw-bold mb-3">Cap nhat trang thai don</h5>
+                    <h5 class="fw-bold mb-3">Cập nhật trạng thái đơn</h5>
 
                     <div class="text-uppercase small text-muted fw-semibold mb-3">{{ $tieuDeXuLy }}</div>
 
@@ -554,12 +592,33 @@
                                     @csrf
                                     @method('PATCH')
                                     <input type="hidden" name="trang_thai" value="{{ $hanhDong['trang_thai'] }}">
+                                    @if($hanhDong['trang_thai'] === 'khong_den')
+                                        <input type="hidden" name="phi_khong_den" value="{{ (float) $datPhong->tong_tien_dat_coc_goi_y }}">
+                                        <input type="hidden" name="ly_do_khong_den" value="Khách không đến theo lịch đã xác nhận.">
+                                    @endif
                                     <button type="submit" class="btn w-100 {{ $hanhDong['class'] }}">
                                         {{ $hanhDong['label'] }}
                                     </button>
                                 </form>
                             @endforeach
                         </div>
+                        @if($datPhong->trang_thai === 'da_xac_nhan')
+                            <form method="POST" action="{{ route('dat-phong.cap-nhat-trang-thai', $datPhong) }}" class="border rounded-4 p-3 bg-light-subtle">
+                                @csrf
+                                @method('PATCH')
+                                <input type="hidden" name="trang_thai" value="khong_den">
+                                <div class="small text-muted mb-2">Tình huống no-show: có thể sửa phí trước khi xác nhận.</div>
+                                <div class="mb-2">
+                                    <label class="form-label small fw-semibold">Phí no-show</label>
+                                    <input type="number" min="0" step="1000" name="phi_khong_den" class="form-control" value="{{ old('phi_khong_den', (int) $datPhong->tong_tien_dat_coc_goi_y) }}">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label small fw-semibold">Lý do</label>
+                                    <textarea name="ly_do_khong_den" rows="2" class="form-control">{{ old('ly_do_khong_den', 'Khách không đến theo lịch đã xác nhận.') }}</textarea>
+                                </div>
+                                <button type="submit" class="btn btn-outline-warning w-100">Lưu nghiệp vụ không đến</button>
+                            </form>
+                        @endif
                     @else
                         <div class="alert alert-light border mb-0">
                             {{ $datPhong->trang_thai === 'da_huy' ? 'Don da huy, khong con buoc xu ly.' : 'Don da hoan tat, khong can doi trang thai nua.' }}

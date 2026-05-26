@@ -5,7 +5,7 @@
 @section('content')
 <div>
     <h1 class="auth-card-title">Đăng nhập</h1>
-    <p class="auth-card-subtitle">Đặt phòng khách sạn cho khách hàng</p>
+    <p class="auth-card-subtitle">Dành cho khách hàng</p>
 
     <form action="{{ route('login.submit') }}" method="POST">
         @csrf

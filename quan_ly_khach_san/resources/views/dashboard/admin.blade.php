@@ -2,60 +2,228 @@
 
 @section('title', 'Bảng điều khiển quản trị')
 
+@push('styles')
+    <style>
+        .admin-hero-panel {
+            border: 1px solid #c7d6e6;
+            border-radius: 22px;
+            background:
+                linear-gradient(135deg, rgba(7, 27, 58, 0.96), rgba(15, 118, 110, 0.9)),
+                radial-gradient(circle at 12% 10%, rgba(216, 168, 79, 0.28), transparent 34%);
+            color: #fff;
+            padding: clamp(22px, 2.2vw, 34px);
+            box-shadow: 0 20px 42px rgba(7, 27, 58, 0.18);
+        }
+
+        .admin-hero-panel .section-title,
+        .admin-hero-panel .section-subtitle {
+            color: #fff !important;
+        }
+
+        .admin-hero-panel .section-subtitle {
+            opacity: 0.84;
+        }
+
+        .admin-hero-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .admin-hero-actions .btn {
+            min-height: 42px;
+            border-radius: 12px;
+            font-weight: 800;
+        }
+
+        .ops-kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 16px;
+        }
+
+        .ops-kpi-card {
+            border: 1px solid #d4e0ec;
+            border-radius: 18px;
+            background: #fff;
+            padding: 18px;
+            min-height: 136px;
+            box-shadow: 0 10px 24px rgba(15, 41, 68, 0.06);
+        }
+
+        .ops-kpi-top {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .ops-kpi-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 13px;
+            display: grid;
+            place-items: center;
+            color: #0f5f58;
+            background: #eef8f6;
+        }
+
+        .ops-kpi-label {
+            color: #405a76;
+            font-size: 0.84rem;
+            font-weight: 800;
+        }
+
+        .ops-kpi-value {
+            color: #0e1f35;
+            font-size: 1.9rem;
+            line-height: 1;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+        }
+
+        .ops-kpi-note {
+            margin-top: 8px;
+            color: #405a76;
+            font-size: 0.84rem;
+            font-weight: 600;
+        }
+
+        .ops-kpi-card.is-warning .ops-kpi-icon {
+            color: #9a3412;
+            background: #fff7ed;
+        }
+
+        .ops-kpi-card.is-success .ops-kpi-icon {
+            color: #166534;
+            background: #dcfce7;
+        }
+
+        .ops-action-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .ops-action-card,
+        .recent-booking-card {
+            border: 1px solid #d7e3ef;
+            border-radius: 16px;
+            background: #fff;
+            padding: 14px;
+            height: 100%;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+        }
+
+        .ops-action-card:hover,
+        .recent-booking-card:hover {
+            border-color: #a9c1d8;
+            box-shadow: 0 14px 28px rgba(15, 41, 68, 0.09);
+            transform: translateY(-2px);
+        }
+
+        .ops-action-card strong {
+            display: block;
+            color: #0e1f35;
+            margin-bottom: 4px;
+        }
+
+        .ops-action-card i {
+            width: 34px;
+            height: 34px;
+            border-radius: 11px;
+            display: grid;
+            place-items: center;
+            color: #0f5f58;
+            background: #eef8f6;
+            margin-bottom: 10px;
+        }
+
+        @media (max-width: 1199px) {
+            .ops-kpi-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 991px) {
+            .admin-hero-actions {
+                justify-content: flex-start;
+            }
+
+            .ops-action-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 767px) {
+            .ops-kpi-grid,
+            .ops-action-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+@endpush
+
 @section('content')
-    <div class="mb-4">
-        <h2 class="section-title">Bảng điều khiển quản trị</h2>
-        <p class="section-subtitle">Toàn bộ số liệu vận hành được đồng bộ từ đặt phòng online và dữ liệu nội bộ.</p>
-    </div>
-
-    <div class="row g-4 mb-4">
-        <div class="col-md-6 col-xl-3">
-            <div class="metric-card">
-                <div class="metric-label">Tổng người dùng</div>
-                <div class="metric-value">{{ $tongNguoiDung }}</div>
+    <div class="admin-hero-panel">
+        <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+            <div>
+                <h2 class="section-title">Bảng điều khiển quản trị</h2>
+                <p class="section-subtitle">Tập trung các việc cần xử lý hôm nay: đặt phòng, thanh toán, tài khoản và doanh thu.</p>
             </div>
-        </div>
-        <div class="col-md-6 col-xl-3">
-            <div class="metric-card">
-                <div class="metric-label">Tài khoản quản trị</div>
-                <div class="metric-value">{{ $tongAdmin }}</div>
-            </div>
-        </div>
-        <div class="col-md-6 col-xl-3">
-            <div class="metric-card">
-                <div class="metric-label">Tài khoản nhân viên</div>
-                <div class="metric-value">{{ $tongNhanVien }}</div>
-            </div>
-        </div>
-        <div class="col-md-6 col-xl-3">
-            <div class="metric-card">
-                <div class="metric-label">Tài khoản hoạt động</div>
-                <div class="metric-value text-success">{{ $tongTaiKhoanHoatDong }}</div>
+            <div class="admin-hero-actions">
+                <a href="{{ route('dat-phong.index', ['trang_thai' => 'cho_xac_nhan']) }}" class="btn btn-light">
+                    <i class="fa-solid fa-calendar-check me-1"></i>Đơn chờ xác nhận
+                </a>
+                <a href="{{ route('thanh-toan.index', ['trang_thai' => 'cho_xu_ly', 'nguon_tao' => 'khach_hang']) }}" class="btn btn-warning">
+                    <i class="fa-solid fa-receipt me-1"></i>Thanh toán chờ duyệt
+                </a>
             </div>
         </div>
     </div>
 
-    <div class="row g-4 mb-4">
-        <div class="col-md-4">
-            <div class="metric-card">
-                <div class="metric-label">Tổng đơn đặt phòng</div>
-                <div class="metric-value">{{ $tongDatPhong }}</div>
-                <div class="small text-muted mt-2">Đơn từ website: {{ $tongDatPhongOnline }}</div>
+    <div class="ops-kpi-grid">
+        <div class="ops-kpi-card">
+            <div class="ops-kpi-top">
+                <div>
+                    <div class="ops-kpi-label">Tổng người dùng</div>
+                    <div class="ops-kpi-value">{{ $tongNguoiDung }}</div>
+                </div>
+                <div class="ops-kpi-icon"><i class="fa-solid fa-users"></i></div>
             </div>
+            <div class="ops-kpi-note">{{ $tongTaiKhoanHoatDong }} tài khoản đang hoạt động</div>
         </div>
-        <div class="col-md-4">
-            <div class="metric-card">
-                <div class="metric-label">Đơn chờ xác nhận</div>
-                <div class="metric-value text-warning">{{ $tongDatPhongChoXacNhan }}</div>
-                <div class="small text-muted mt-2">Cần xử lý nhanh để tăng tỷ lệ chuyển đổi.</div>
+        <div class="ops-kpi-card">
+            <div class="ops-kpi-top">
+                <div>
+                    <div class="ops-kpi-label">Tổng đơn đặt phòng</div>
+                    <div class="ops-kpi-value">{{ $tongDatPhong }}</div>
+                </div>
+                <div class="ops-kpi-icon"><i class="fa-solid fa-calendar-days"></i></div>
             </div>
+            <div class="ops-kpi-note">Đơn từ website: {{ $tongDatPhongOnline }}</div>
         </div>
-        <div class="col-md-4">
-            <div class="metric-card">
-                <div class="metric-label">Doanh thu tháng này</div>
-                <div class="metric-value text-success">{{ number_format((float) $doanhThuThangNay, 0, ',', '.') }}</div>
-                <div class="small text-muted mt-2">VNĐ</div>
+        <div class="ops-kpi-card is-warning">
+            <div class="ops-kpi-top">
+                <div>
+                    <div class="ops-kpi-label">Đơn chờ xác nhận</div>
+                    <div class="ops-kpi-value text-warning">{{ $tongDatPhongChoXacNhan }}</div>
+                </div>
+                <div class="ops-kpi-icon"><i class="fa-solid fa-clock"></i></div>
             </div>
+            <div class="ops-kpi-note">Cần xử lý nhanh để tăng tỷ lệ chuyển đổi.</div>
+        </div>
+        <div class="ops-kpi-card is-success">
+            <div class="ops-kpi-top">
+                <div>
+                    <div class="ops-kpi-label">Doanh thu tháng này</div>
+                    <div class="ops-kpi-value text-success">{{ number_format((float) $doanhThuThangNay, 0, ',', '.') }}</div>
+                </div>
+                <div class="ops-kpi-icon"><i class="fa-solid fa-chart-line"></i></div>
+            </div>
+            <div class="ops-kpi-note">VNĐ</div>
         </div>
     </div>
 
@@ -124,48 +292,42 @@
                     <h5 class="fw-bold mb-3">Điều hướng nhanh theo nghiệp vụ</h5>
                     <p class="text-muted mb-4">Mở nhanh các chức năng chính để xử lý vận hành hàng ngày.</p>
 
-                    <div class="row g-3">
-                        <div class="col-md-6 col-xl-4">
-                            <a href="{{ route('dat-phong.index') }}" class="d-block border rounded-4 p-3 h-100">
-                                <div class="fw-bold mb-1"><i class="fa-solid fa-calendar-check me-2 text-primary"></i>Quản lý đặt phòng</div>
+                    <div class="ops-action-grid">
+                        <a href="{{ route('dat-phong.index') }}" class="ops-action-card">
+                                <i class="fa-solid fa-calendar-check"></i>
+                                <strong>Quản lý đặt phòng</strong>
                                 <div class="small text-muted">Duyệt đơn mới, cập nhật trạng thái lưu trú.</div>
-                            </a>
-                        </div>
-                        <div class="col-md-6 col-xl-4">
-                            <a href="{{ route('phong.index') }}" class="d-block border rounded-4 p-3 h-100">
-                                <div class="fw-bold mb-1"><i class="fa-solid fa-bed me-2 text-info"></i>Quản lý phòng</div>
+                        </a>
+                        <a href="{{ route('phong.index') }}" class="ops-action-card">
+                                <i class="fa-solid fa-bed"></i>
+                                <strong>Quản lý phòng</strong>
                                 <div class="small text-muted">Theo dõi tồn kho phòng và giá phòng mặc định.</div>
-                            </a>
-                        </div>
-                        <div class="col-md-6 col-xl-4">
-                            <a href="{{ route('khach-hang.index') }}" class="d-block border rounded-4 p-3 h-100">
-                                <div class="fw-bold mb-1"><i class="fa-solid fa-users me-2 text-secondary"></i>Quản lý khách hàng</div>
+                        </a>
+                        <a href="{{ route('khach-hang.index') }}" class="ops-action-card">
+                                <i class="fa-solid fa-users"></i>
+                                <strong>Quản lý khách hàng</strong>
                                 <div class="small text-muted">Xem hồ sơ, lịch sử và hạng khách hàng.</div>
-                            </a>
-                        </div>
-                        <div class="col-md-6 col-xl-4">
-                            <a href="{{ route('hoa-don.index') }}" class="d-block border rounded-4 p-3 h-100">
-                                <div class="fw-bold mb-1"><i class="fa-solid fa-file-invoice-dollar me-2 text-danger"></i>Quản lý hóa đơn</div>
+                        </a>
+                        <a href="{{ route('hoa-don.index') }}" class="ops-action-card">
+                                <i class="fa-solid fa-file-invoice-dollar"></i>
+                                <strong>Quản lý hóa đơn</strong>
                                 <div class="small text-muted">Kiểm soát công nợ và trạng thái thanh toán.</div>
-                            </a>
-                        </div>
-                        <div class="col-md-6 col-xl-4">
-                            <a href="{{ route('thanh-toan.index', ['trang_thai' => 'cho_xu_ly', 'nguon_tao' => 'khach_hang']) }}" class="d-block border rounded-4 p-3 h-100">
-                                <div class="fw-bold mb-1"><i class="fa-solid fa-credit-card me-2 text-success"></i>Quản lý thanh toán</div>
+                        </a>
+                        <a href="{{ route('thanh-toan.index', ['trang_thai' => 'cho_xu_ly', 'nguon_tao' => 'khach_hang']) }}" class="ops-action-card">
+                                <i class="fa-solid fa-credit-card"></i>
+                                <strong>Quản lý thanh toán</strong>
                                 <div class="small text-muted">
                                     Ghi nhận giao dịch và đối soát hóa đơn.
                                     @if($tongYeuCauThanhToanChoXuLy > 0)
                                         Hiện có {{ $tongYeuCauThanhToanChoXuLy }} yêu cầu khách đang chờ duyệt.
                                     @endif
                                 </div>
-                            </a>
-                        </div>
-                        <div class="col-md-6 col-xl-4">
-                            <a href="{{ route('bao-cao.index') }}" class="d-block border rounded-4 p-3 h-100">
-                                <div class="fw-bold mb-1"><i class="fa-solid fa-chart-line me-2 text-warning"></i>Báo cáo thống kê</div>
+                        </a>
+                        <a href="{{ route('bao-cao.index') }}" class="ops-action-card">
+                                <i class="fa-solid fa-chart-line"></i>
+                                <strong>Báo cáo thống kê</strong>
                                 <div class="small text-muted">Theo dõi KPI doanh thu và công suất phòng.</div>
-                            </a>
-                        </div>
+                        </a>
                     </div>
                 </div>
             </div>
@@ -183,13 +345,14 @@
                                 'cho_xac_nhan' => 'chip chip-warning',
                                 'da_xac_nhan' => 'chip chip-info',
                                 'da_nhan_phong' => 'chip chip-neutral',
+                                'khong_den' => 'chip chip-danger',
                                 'da_tra_phong' => 'chip chip-success',
                                 'da_huy' => 'chip chip-danger',
                             ];
                             $chip = $mapTrangThai[$datPhong->trang_thai] ?? 'chip chip-neutral';
                         @endphp
 
-                        <div class="border rounded-4 p-3 mb-2">
+                        <div class="recent-booking-card mb-2">
                             <div class="d-flex justify-content-between align-items-center gap-2">
                                 <strong>{{ $datPhong->ma_dat_phong }}</strong>
                                 <span class="{{ $chip }}">{{ \App\Support\HienThiGiaTri::nhanGiaTri($datPhong->trang_thai) }}</span>

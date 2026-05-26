@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\DatPhong;
 use App\Models\HoaDon;
 use App\Models\KhachHang;
 use App\Models\ThanhToan;
@@ -30,6 +31,11 @@ class ThanhToanController extends Controller
         'chuyen_khoan',
         'the',
         'vi_dien_tu',
+    ];
+
+    private const LOAI_YEU_CAU_KHACH_HANG = [
+        'thanh_toan_them',
+        'coc_phong',
     ];
 
     private const NGUON_TAO = [
@@ -124,6 +130,7 @@ class ThanhToanController extends Controller
             ->orderByDesc('id')
             ->take(50)
             ->get();
+
         $danhSachHoaDon = $danhSachHoaDon
             ->map(function (HoaDon $hoaDon) {
                 $hoaDon->dongBoGiaTriTuDatPhong(false);
@@ -219,13 +226,16 @@ class ThanhToanController extends Controller
         $duLieu = $request->validate([
             'so_tien' => ['required', 'numeric', 'min:1000'],
             'phuong_thuc_thanh_toan' => ['required', Rule::in(self::PHUONG_THUC_KHACH_HANG_CO_THE_GUI)],
+            'loai_yeu_cau' => ['nullable', Rule::in(self::LOAI_YEU_CAU_KHACH_HANG)],
             'ma_tham_chieu' => ['nullable', 'string', 'max:100'],
             'ghi_chu' => ['nullable', 'string', 'max:1000'],
         ]);
 
-        DB::transaction(function () use ($hoaDon, $duLieu) {
+        $loaiYeuCau = $duLieu['loai_yeu_cau'] ?? 'thanh_toan_them';
+
+        DB::transaction(function () use ($hoaDon, $duLieu, $loaiYeuCau) {
             $hoaDon = HoaDon::query()
-                ->with('thanhToan')
+                ->with(['datPhong.chiTietDatPhong', 'thanhToan'])
                 ->findOrFail($hoaDon->id);
 
             $this->baoDamHoaDonCoTheNhanThanhToan($hoaDon);
@@ -235,6 +245,14 @@ class ThanhToanController extends Controller
                 null,
                 true
             );
+
+            if ($loaiYeuCau === 'coc_phong') {
+                $this->baoDamHoaDonCoTheNhanYeuCauDatCoc($hoaDon);
+                $this->baoDamSoTienCocKhongVuotQuaMucGoiY(
+                    $hoaDon,
+                    (float) $duLieu['so_tien']
+                );
+            }
 
             ThanhToan::query()->create([
                 'ma_thanh_toan' => $this->taoMaThanhToan(),
@@ -248,13 +266,17 @@ class ThanhToanController extends Controller
                 'nguoi_tao_id' => auth()->id(),
                 'nguoi_xu_ly_id' => null,
                 'thoi_diem_xu_ly' => null,
-                'ghi_chu' => $duLieu['ghi_chu'] ?? null,
+                'ghi_chu' => $this->taoGhiChuYeuCauKhachHang($loaiYeuCau, $duLieu['ghi_chu'] ?? null),
             ]);
         });
 
+        $thongBao = $loaiYeuCau === 'coc_phong'
+            ? 'Đã ghi nhận yêu cầu cọc phòng. Giao dịch sẽ được nội bộ đối soát trước khi xác nhận thành công.'
+            : 'Đã ghi nhận yêu cầu thanh toán. Giao dịch sẽ được nội bộ đối soát trước khi xác nhận thành công.';
+
         return redirect()
             ->route('booking.hoa-don.show', $hoaDon)
-            ->with('success', 'Đã ghi nhận yêu cầu thanh toán. Giao dịch sẽ được nội bộ đối soát trước khi xác nhận thành công.');
+            ->with('success', $thongBao);
     }
 
     public function capNhatTrangThai(Request $request, ThanhToan $thanhToan)
@@ -367,6 +389,48 @@ class ThanhToanController extends Controller
         }
     }
 
+    private function baoDamHoaDonCoTheNhanYeuCauDatCoc(HoaDon $hoaDon): void
+    {
+        $hoaDon->loadMissing('datPhong.chiTietDatPhong');
+
+        $datPhong = $hoaDon->datPhong;
+        $coTheDatCoc = $datPhong
+            && in_array(
+                $datPhong->trang_thai,
+                [DatPhong::TRANG_THAI_CHO_XAC_NHAN, DatPhong::TRANG_THAI_DA_XAC_NHAN],
+                true
+            )
+            && $datPhong->tinhTienCocGoiY() > 0;
+
+        if (! $coTheDatCoc) {
+            throw ValidationException::withMessages([
+                'loai_yeu_cau' => 'Đơn đặt phòng này hiện không còn áp dụng cọc giữ chỗ.',
+            ]);
+        }
+    }
+
+    private function baoDamSoTienCocKhongVuotQuaMucGoiY(HoaDon $hoaDon, float $soTien): void
+    {
+        $soTienDaThu = $this->tinhTongTienTheoTrangThai($hoaDon, 'thanh_cong');
+        $soTienChoXuLy = $this->tinhTongTienTheoTrangThai($hoaDon, 'cho_xu_ly');
+        $soTienConThieuCoc = max(
+            0,
+            ((float) ($hoaDon->datPhong?->tinhTienCocGoiY() ?? 0)) - $soTienDaThu - $soTienChoXuLy
+        );
+
+        if ($soTienConThieuCoc <= 0) {
+            throw ValidationException::withMessages([
+                'loai_yeu_cau' => 'Đơn đặt phòng này đã đủ mức cọc gợi ý.',
+            ]);
+        }
+
+        if ($soTien > $soTienConThieuCoc) {
+            throw ValidationException::withMessages([
+                'so_tien' => 'Số tiền cọc vượt quá mức cọc còn thiếu (' . number_format($soTienConThieuCoc, 0, ',', '.') . ' VNĐ).',
+            ]);
+        }
+    }
+
     private function tinhTongTienTheoTrangThai(HoaDon $hoaDon, string $trangThai, ?ThanhToan $boQuaThanhToan = null): float
     {
         if ($hoaDon->relationLoaded('thanhToan')) {
@@ -395,6 +459,23 @@ class ThanhToanController extends Controller
                 && $hoaDon->datPhong->khach_hang_id === $khachHangDangNhap->id,
             404
         );
+    }
+
+    private function taoGhiChuYeuCauKhachHang(string $loaiYeuCau, ?string $ghiChu): ?string
+    {
+        $ghiChu = trim((string) $ghiChu);
+
+        if ($loaiYeuCau !== 'coc_phong') {
+            return $ghiChu !== '' ? $ghiChu : null;
+        }
+
+        if ($ghiChu === '') {
+            return '[Cọc phòng] Khách gửi yêu cầu cọc giữ chỗ.';
+        }
+
+        return str_starts_with($ghiChu, '[Cọc phòng]')
+            ? $ghiChu
+            : '[Cọc phòng] ' . $ghiChu;
     }
 
     private function taoMaThanhToan(): string

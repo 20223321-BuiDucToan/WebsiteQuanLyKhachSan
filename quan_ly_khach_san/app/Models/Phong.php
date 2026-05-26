@@ -117,6 +117,14 @@ class Phong extends Model
         return $query;
     }
 
+    public function scopeCoAnh(Builder $query): Builder
+    {
+        return $query
+            ->whereNotNull('anh_phong')
+            ->where('anh_phong', '!=', '[]')
+            ->where('anh_phong', '!=', 'null');
+    }
+
     public function coDatPhongDangO(): bool
     {
         return $this->chiTietDatPhong()

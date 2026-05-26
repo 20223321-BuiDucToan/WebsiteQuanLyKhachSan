@@ -15,15 +15,42 @@ class TaiKhoanKhachHangPortalTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_customer_can_view_account_page_with_profile_and_payment_sections(): void
+    public function test_customer_can_view_account_page_with_profile_section(): void
     {
         [$taiKhoan, $khachHang] = $this->taoKhachHangCoTaiKhoan();
-        $hoaDon = $this->taoHoaDonChoKhachHang($taiKhoan, $khachHang);
 
         $response = $this->actingAs($taiKhoan)->get(route('booking.account'));
 
         $response->assertOk();
         $response->assertSee('Thông tin khách hàng');
+        $response->assertSee('Thanh toán của tôi');
+        $response->assertSee($khachHang->ma_khach_hang);
+    }
+
+    public function test_customer_portal_shows_auto_processing_deadline_for_online_booking(): void
+    {
+        $this->travelTo(now()->startOfDay()->setTime(21, 30));
+
+        [$taiKhoan, $khachHang] = $this->taoKhachHangCoTaiKhoan();
+        $this->taoHoaDonChoKhachHang($taiKhoan, $khachHang);
+
+        $response = $this->actingAs($taiKhoan)->get(route('booking.account'));
+
+        $response->assertOk();
+        $response->assertSee('Chuyển không đến lúc 23:00 ' . now()->format('d/m/Y'));
+        $response->assertSee('Còn 1 giờ 30 phút nữa.');
+
+        $this->travelBack();
+    }
+
+    public function test_customer_can_view_separate_payment_page(): void
+    {
+        [$taiKhoan, $khachHang] = $this->taoKhachHangCoTaiKhoan();
+        $hoaDon = $this->taoHoaDonChoKhachHang($taiKhoan, $khachHang);
+
+        $response = $this->actingAs($taiKhoan)->get(route('booking.payments'));
+
+        $response->assertOk();
         $response->assertSee('Thanh toán và hóa đơn của tôi');
         $response->assertSee($hoaDon->ma_hoa_don);
     }

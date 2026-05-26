@@ -3,12 +3,16 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Mail\DatLaiMatKhauMail;
 use App\Models\KhachHang;
 use App\Models\NguoiDung;
+use Illuminate\Support\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
 class AuthController extends Controller
@@ -89,7 +93,7 @@ class AuthController extends Controller
                 'email.email' => 'Email không đúng định dạng.',
                 'email.unique' => 'Email đã tồn tại.',
                 'password.required' => 'Mật khẩu không được để trống.',
-                'password.min' => 'Mật khẩu phải từ 6 ký tự trở lên.',
+                'password.min' => 'Mật khẩu phải có ít nhất 6 ký tự.',
                 'password.confirmed' => 'Xác nhận mật khẩu không khớp.',
             ],
         );
@@ -133,58 +137,76 @@ class AuthController extends Controller
     {
         $request->validate(
             [
-                'ten_dang_nhap' => 'required|string|max:100',
                 'email' => 'required|email|max:255',
             ],
             [
-                'ten_dang_nhap.required' => 'Vui lòng nhập tên đăng nhập.',
                 'email.required' => 'Vui lòng nhập email.',
                 'email.email' => 'Email không đúng định dạng.',
             ],
         );
 
         $nguoiDung = NguoiDung::query()
-            ->where('ten_dang_nhap', $request->ten_dang_nhap)
             ->where('email', $request->email)
+            ->where('trang_thai', 'hoat_dong')
             ->first();
 
-        if (!$nguoiDung) {
-            return back()->withErrors([
-                'email' => 'Tên đăng nhập và email không khớp trong hệ thống.',
-            ])->withInput();
+        $resetLink = null;
+
+        if ($nguoiDung) {
+            $token = Str::random(64);
+
+            DB::table('password_reset_tokens')->updateOrInsert(
+                ['email' => $nguoiDung->email],
+                [
+                    'token' => Hash::make($token),
+                    'created_at' => now(),
+                ],
+            );
+
+            $resetLink = route('password.reset', [
+                'token' => $token,
+                'email' => $nguoiDung->email,
+            ]);
+
+            try {
+                Mail::to($nguoiDung->email)->send(new DatLaiMatKhauMail($nguoiDung, $resetLink));
+            } catch (\Throwable $exception) {
+                Log::error('Không gửi được email đặt lại mật khẩu.', [
+                    'email' => $nguoiDung->email,
+                    'message' => $exception->getMessage(),
+                ]);
+
+                return back()
+                    ->withInput()
+                    ->withErrors([
+                        'email' => 'Hệ thống chưa gửi được email đặt lại mật khẩu. Vui lòng thử lại sau.',
+                    ]);
+            }
         }
-
-        if ($nguoiDung->trang_thai === 'tam_khoa') {
-            return back()->withErrors([
-                'ten_dang_nhap' => 'Tài khoản này đang bị tạm khóa.',
-            ])->withInput();
-        }
-
-        $token = Str::random(64);
-
-        DB::table('password_reset_tokens')->updateOrInsert(
-            ['email' => $nguoiDung->email],
-            [
-                'token' => Hash::make($token),
-                'created_at' => now(),
-            ],
-        );
-
-        $resetLink = route('password.reset', ['token' => $token])
-            . '?email=' . urlencode($nguoiDung->email)
-            . '&ten_dang_nhap=' . urlencode($nguoiDung->ten_dang_nhap);
 
         return back()
-            ->with('success', 'Xác thực thông tin thành công. Bạn có thể đặt lại mật khẩu ngay bây giờ.')
-            ->with('reset_link', $resetLink);
+            ->with('success', 'Nếu email tồn tại và tài khoản đang hoạt động, hệ thống đã gửi liên kết đặt lại mật khẩu. Liên kết có hiệu lực trong 60 phút.')
+            ->with('auth_modal', 'forgot');
     }
 
     public function showResetPassword(Request $request, string $token)
     {
+        $email = $request->query('email');
+        $resetRow = $email
+            ? DB::table('password_reset_tokens')->where('email', $email)->first()
+            : null;
+
+        if (!$resetRow || !Hash::check($token, $resetRow->token) || $this->tokenDatLaiMatKhauHetHan($resetRow->created_at)) {
+            return redirect()
+                ->route('password.request')
+                ->withErrors([
+                    'email' => 'Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn. Vui lòng gửi yêu cầu mới.',
+                ]);
+        }
+
         return view('auth.reset_password', [
             'token' => $token,
-            'email' => $request->query('email'),
-            'ten_dang_nhap' => $request->query('ten_dang_nhap'),
+            'email' => $email,
         ]);
     }
 
@@ -192,32 +214,37 @@ class AuthController extends Controller
     {
         $request->validate(
             [
-                'ten_dang_nhap' => 'required|string|max:100',
                 'email' => 'required|email|exists:nguoi_dung,email',
                 'token' => 'required',
-                'password' => 'required|string|min:6|confirmed',
+                'password' => 'required|string|min:8|confirmed',
             ],
             [
-                'ten_dang_nhap.required' => 'Vui lòng nhập tên đăng nhập.',
                 'email.required' => 'Vui lòng nhập email.',
                 'email.email' => 'Email không đúng định dạng.',
                 'email.exists' => 'Email không tồn tại.',
                 'token.required' => 'Token không hợp lệ.',
                 'password.required' => 'Vui lòng nhập mật khẩu mới.',
-                'password.min' => 'Mật khẩu mới phải từ 6 ký tự.',
+                'password.min' => 'Mật khẩu mới phải có ít nhất 8 ký tự.',
                 'password.confirmed' => 'Xác nhận mật khẩu không khớp.',
             ],
         );
 
         $nguoiDung = NguoiDung::query()
-            ->where('ten_dang_nhap', $request->ten_dang_nhap)
             ->where('email', $request->email)
             ->first();
 
         if (!$nguoiDung) {
             return back()->withErrors([
-                'email' => 'Tên đăng nhập và email không khớp.',
+                'email' => 'Không tìm thấy tài khoản phù hợp.',
             ])->withInput();
+        }
+
+        if ($nguoiDung->trang_thai !== 'hoat_dong') {
+            return redirect()
+                ->route('password.request')
+                ->withErrors([
+                    'email' => 'Tài khoản chưa thể đặt lại mật khẩu. Vui lòng liên hệ bộ phận hỗ trợ.',
+                ]);
         }
 
         $resetRow = DB::table('password_reset_tokens')
@@ -236,7 +263,7 @@ class AuthController extends Controller
             ])->withInput();
         }
 
-        if (empty($resetRow->created_at) || now()->diffInMinutes($resetRow->created_at) > 60) {
+        if ($this->tokenDatLaiMatKhauHetHan($resetRow->created_at)) {
             return back()->withErrors([
                 'token' => 'Liên kết đặt lại mật khẩu đã hết hạn.',
             ])->withInput();
@@ -249,6 +276,15 @@ class AuthController extends Controller
         DB::table('password_reset_tokens')->where('email', $request->email)->delete();
 
         return redirect()->route('login')->with('success', 'Đặt lại mật khẩu thành công. Hãy đăng nhập lại.');
+    }
+
+    private function tokenDatLaiMatKhauHetHan($createdAt): bool
+    {
+        if (!$createdAt) {
+            return true;
+        }
+
+        return Carbon::parse($createdAt)->addMinutes(60)->isPast();
     }
 
     private function dongBoKhachHang(NguoiDung $nguoiDung): void

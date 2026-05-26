@@ -1,0 +1,12 @@
+<VirtualHost *:80>
+    ServerName hotel.test
+    DocumentRoot "C:/Users/ADMIN/Documents/chuyen_de_1/WebsiteQuanLyKhachSan/quan_ly_khach_san/public"
+
+    <Directory "C:/Users/ADMIN/Documents/chuyen_de_1/WebsiteQuanLyKhachSan/quan_ly_khach_san/public">
+        AllowOverride All
+        Require all granted
+    </Directory>
+
+    ErrorLog "logs/hotel-test-error.log"
+    CustomLog "logs/hotel-test-access.log" common
+</VirtualHost>

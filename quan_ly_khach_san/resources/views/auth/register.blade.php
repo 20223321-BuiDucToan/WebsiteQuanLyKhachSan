@@ -5,7 +5,7 @@
 @section('content')
 <div>
     <h1 class="auth-card-title">Đăng ký</h1>
-    <p class="auth-card-subtitle">Tạo tài khoản khách hàng để đặt phòng và theo dõi đơn đặt của bạn.</p>
+    <p class="auth-card-subtitle">Tạo tài khoản mới.</p>
 
     <form action="{{ route('register.post') }}" method="POST">
         @csrf

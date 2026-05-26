@@ -1,27 +1,31 @@
 @extends('layouts.admin')
 
-@section('title', 'Them dich vu')
+@section('title', 'Thêm dịch vụ')
 
 @section('content')
-    <div class="mb-4">
-        <h2 class="section-title">Them dich vu</h2>
-        <p class="section-subtitle">Tao dich vu moi de nhan vien co the ghi nhan truc tiep vao tung don dat phong.</p>
-    </div>
+    <div class="form-page">
+        <div class="form-page-header">
+            <div>
+                <h2 class="form-page-title">Thêm dịch vụ</h2>
+                <p class="form-page-subtitle">Biểu mẫu được rút gọn để nhân viên nhập nhanh tên dịch vụ, đơn giá và trạng thái sử dụng.</p>
+            </div>
+        </div>
 
-    <div class="premium-card">
-        <div class="card-body p-4">
-            <form action="{{ route('dich-vu.store') }}" method="POST" class="row g-4">
-                @csrf
+        <div class="form-shell">
+            <div class="form-shell__body">
+                <form action="{{ route('dich-vu.store') }}" method="POST" class="row g-4">
+                    @csrf
 
-                @include('dich_vu._form', ['dichVu' => $dichVu])
+                    @include('dich_vu._form', ['dichVu' => $dichVu])
 
-                <div class="col-12 d-flex gap-2">
-                    <button type="submit" class="btn btn-gradient">
-                        <i class="fa-solid fa-floppy-disk me-2"></i>Luu dich vu
-                    </button>
-                    <a href="{{ route('dich-vu.index') }}" class="btn btn-soft">Quay lại</a>
-                </div>
-            </form>
+                    <div class="col-12 form-actions">
+                        <button type="submit" class="btn btn-gradient">
+                            <i class="fa-solid fa-floppy-disk me-2"></i>Lưu dịch vụ
+                        </button>
+                        <a href="{{ route('dich-vu.index') }}" class="btn btn-soft">Quay lại</a>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 @endsection

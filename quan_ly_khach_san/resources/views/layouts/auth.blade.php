@@ -7,14 +7,14 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap&subset=vietnamese" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
     <style>
         :root {
             --ink-900: #0f1f33;
-            --ink-600: #52657f;
+            --ink-600: #405a76;
             --line: #d8e3ef;
             --brand: #0f766e;
             --brand-dark: #0a5f58;
@@ -23,7 +23,7 @@
         }
 
         * {
-            font-family: 'Be Vietnam Pro', sans-serif;
+            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             box-sizing: border-box;
         }
 
@@ -37,6 +37,8 @@
             align-items: center;
             justify-content: center;
             padding: clamp(18px, 3vw, 36px);
+            color: var(--ink-900);
+            font-weight: 500;
         }
 
         .auth-shell {
@@ -90,19 +92,21 @@
         }
 
         .aside-title {
-            font-family: 'Playfair Display', serif;
             font-size: clamp(1.8rem, 3vw, 2.45rem);
             line-height: 1.35;
             margin-bottom: 14px;
             position: relative;
             z-index: 1;
+            font-weight: 800;
+            letter-spacing: -0.03em;
         }
 
         .aside-text {
-            color: #e8f6f2;
+            color: #f3fffb;
             line-height: 1.75;
             position: relative;
             z-index: 1;
+            font-weight: 600;
         }
 
         .aside-points {
@@ -116,6 +120,7 @@
         .aside-points span {
             font-size: 0.96rem;
             line-height: 1.7;
+            font-weight: 700;
         }
 
         .auth-main {
@@ -154,19 +159,21 @@
 
         .auth-card-title {
             margin: 0 0 6px;
-            font-family: 'Playfair Display', serif;
             font-size: 2rem;
             color: var(--ink-900);
+            font-weight: 800;
+            letter-spacing: -0.03em;
         }
 
         .auth-card-subtitle {
             margin-bottom: 22px;
             color: var(--ink-600);
+            font-weight: 600;
         }
 
         .form-label {
-            font-weight: 600;
-            color: #26415c;
+            font-weight: 700;
+            color: #1f3853;
             margin-bottom: 6px;
         }
 
@@ -175,6 +182,14 @@
             border-radius: 12px;
             border-color: #ccd9e8;
             padding: 0.78rem 0.95rem;
+            color: var(--ink-900);
+            font-weight: 600;
+        }
+
+        .form-control::placeholder {
+            color: #526b85;
+            font-weight: 600;
+            opacity: 1;
         }
 
         .form-control:focus {
@@ -199,8 +214,15 @@
 
         .auth-link {
             color: #0f766e;
-            font-weight: 600;
+            font-weight: 700;
             text-decoration: none;
+        }
+
+        .text-muted,
+        .small.text-muted,
+        .text-muted.small {
+            color: var(--ink-600) !important;
+            font-weight: 600;
         }
 
         .auth-link:hover {
@@ -242,16 +264,16 @@
                         <div class="col-lg-6 d-none d-lg-block">
                             <div class="auth-aside">
                                 <div class="aside-brand">
-                                    <i class="fa-solid fa-hotel me-2"></i>Quản lý khách sạn - Nhóm 6
+                                    <i class="fa-solid fa-hotel me-2"></i>Quản lý khách sạn - Nhóm 4
                                 </div>
                                 <div class="aside-title"></div>
                                 <div class="aside-text">
-                                    Hệ thống hỗ trợ đầy đủ quy trình đặt phòng, chăm sóc khách hàng, thanh toán và theo dõi hóa đơn trên một giao diện trực quan.
+                                    Đặt phòng, theo dõi đơn và quản lý thanh toán trong cùng một hệ thống.
                                 </div>
                                 <div class="aside-points">
-                                    <span><i class="fa-solid fa-circle-check me-2"></i>Đặt phòng nhanh và theo dõi trạng thái tức thì</span>
-                                    <span><i class="fa-solid fa-circle-check me-2"></i>Quản lý thông tin tài khoản an toàn</span>
-                                    <span><i class="fa-solid fa-circle-check me-2"></i>Tối ưu vận hành cho admin và nhân viên</span>
+                                    <span><i class="fa-solid fa-circle-check me-2"></i>Đặt phòng nhanh</span>
+                                    <span><i class="fa-solid fa-circle-check me-2"></i>Theo dõi hóa đơn</span>
+                                    <span><i class="fa-solid fa-circle-check me-2"></i>Quản lý tài khoản</span>
                                 </div>
                             </div>
                         </div>

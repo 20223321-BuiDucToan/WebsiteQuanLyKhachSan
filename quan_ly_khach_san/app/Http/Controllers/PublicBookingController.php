@@ -5,13 +5,16 @@ namespace App\Http\Controllers;
 use App\Models\DatPhong;
 use App\Models\HoaDon;
 use App\Models\KhachHang;
+use App\Models\LoaiPhong;
 use App\Models\Phong;
 use App\Models\ThanhToan;
+use App\Support\DatPhongKhachDatQuaHan;
 use Carbon\Carbon;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
@@ -22,10 +25,29 @@ class PublicBookingController extends Controller
      */
     public function index(Request $request)
     {
+        $tuyChonSapXep = $this->layTuyChonSapXepPortal();
+        $tuyChonTienNghi = $this->layTuyChonTienNghiPortal();
+
         $request->validate([
             'ngay_nhan' => ['nullable', 'date', 'after_or_equal:today'],
             'ngay_tra' => ['nullable', 'date', 'after_or_equal:ngay_nhan'],
             'so_khach' => ['nullable', 'integer', 'min:1', 'max:10'],
+            'tu_khoa' => ['nullable', 'string', 'max:100'],
+            'loai_phong_id' => ['nullable', 'integer', 'exists:loai_phong,id'],
+            'gia_tu' => ['nullable', 'numeric', 'min:0'],
+            'gia_den' => ['nullable', 'numeric', 'min:0', 'gte:gia_tu'],
+            'so_giuong' => ['nullable', 'integer', 'min:1', 'max:10'],
+            'loai_giuong' => ['nullable', 'string', 'max:50'],
+            'so_phong_tam' => ['nullable', 'integer', 'min:1', 'max:10'],
+            'dien_tich_tu' => ['nullable', 'numeric', 'min:0'],
+            'dien_tich_den' => ['nullable', 'numeric', 'min:0', 'gte:dien_tich_tu'],
+            'tang_tu' => ['nullable', 'integer', 'min:1', 'max:100'],
+            'tang_den' => ['nullable', 'integer', 'min:1', 'max:100', 'gte:tang_tu'],
+            'co_anh' => ['nullable', 'boolean'],
+            'co_ban_cong' => ['nullable', 'boolean'],
+            'co_bep_rieng' => ['nullable', 'boolean'],
+            'co_huong_bien' => ['nullable', 'boolean'],
+            'sap_xep' => ['nullable', Rule::in(array_keys($tuyChonSapXep))],
         ], [
             'ngay_nhan.after_or_equal' => 'Ngày nhận phòng phải từ hôm nay trở đi.',
             'ngay_tra.after_or_equal' => 'Ngày trả phòng phải từ ngày nhận phòng trở đi.',
@@ -34,6 +56,23 @@ class PublicBookingController extends Controller
         $ngayNhan = $request->input('ngay_nhan');
         $ngayTra = $request->input('ngay_tra');
         $soKhach = $request->filled('so_khach') ? (int) $request->input('so_khach') : null;
+        $tuKhoa = trim((string) $request->input('tu_khoa', ''));
+        $loaiPhongId = $request->filled('loai_phong_id') ? (int) $request->input('loai_phong_id') : null;
+        $giaTu = $request->filled('gia_tu') ? (float) $request->input('gia_tu') : null;
+        $giaDen = $request->filled('gia_den') ? (float) $request->input('gia_den') : null;
+        $soGiuong = $request->filled('so_giuong') ? (int) $request->input('so_giuong') : null;
+        $loaiGiuong = trim((string) $request->input('loai_giuong', ''));
+        $loaiGiuong = $loaiGiuong !== '' ? $loaiGiuong : null;
+        $soPhongTam = $request->filled('so_phong_tam') ? (int) $request->input('so_phong_tam') : null;
+        $dienTichTu = $request->filled('dien_tich_tu') ? (float) $request->input('dien_tich_tu') : null;
+        $dienTichDen = $request->filled('dien_tich_den') ? (float) $request->input('dien_tich_den') : null;
+        $tangTu = $request->filled('tang_tu') ? (int) $request->input('tang_tu') : null;
+        $tangDen = $request->filled('tang_den') ? (int) $request->input('tang_den') : null;
+        $coAnh = $request->boolean('co_anh');
+        $coBanCong = $request->boolean('co_ban_cong');
+        $coBepRieng = $request->boolean('co_bep_rieng');
+        $coHuongBien = $request->boolean('co_huong_bien');
+        $sapXep = $request->input('sap_xep', 'so_phong');
         $ngayTraLoc = $ngayTra;
 
         if ($ngayNhan && $ngayTra && $ngayTra === $ngayNhan) {
@@ -47,14 +86,85 @@ class PublicBookingController extends Controller
                     $ngayNhan ? Carbon::parse($ngayNhan)->startOfDay() : null,
                     $ngayNhan && $ngayTraLoc ? Carbon::parse($ngayTraLoc)->startOfDay() : null
                 )
+                ->when($tuKhoa !== '', function ($query) use ($tuKhoa) {
+                    $query->where(function ($innerQuery) use ($tuKhoa) {
+                        $innerQuery
+                            ->where('so_phong', 'like', "%{$tuKhoa}%")
+                            ->orWhere('ma_phong', 'like', "%{$tuKhoa}%")
+                            ->orWhereHas('loaiPhong', function ($loaiPhongQuery) use ($tuKhoa) {
+                                $loaiPhongQuery
+                                    ->where('ten_loai_phong', 'like', "%{$tuKhoa}%")
+                                    ->orWhere('mo_ta', 'like', "%{$tuKhoa}%")
+                                    ->orWhere('loai_giuong', 'like', "%{$tuKhoa}%");
+                            });
+                    });
+                })
                 ->when($soKhach, function ($query) use ($soKhach) {
                     $query->whereHas('loaiPhong', function ($loaiPhongQuery) use ($soKhach) {
                         $loaiPhongQuery->where('so_nguoi_toi_da', '>=', $soKhach);
                     });
                 })
-                ->orderBy('so_phong')
+                ->when($loaiPhongId, fn ($query) => $query->where('loai_phong_id', $loaiPhongId))
+                ->when($soGiuong, function ($query) use ($soGiuong) {
+                    $query->whereHas('loaiPhong', function ($loaiPhongQuery) use ($soGiuong) {
+                        $loaiPhongQuery->where('so_giuong', '>=', $soGiuong);
+                    });
+                })
+                ->when($loaiGiuong, function ($query) use ($loaiGiuong) {
+                    $query->whereHas('loaiPhong', function ($loaiPhongQuery) use ($loaiGiuong) {
+                        $loaiPhongQuery->where('loai_giuong', $loaiGiuong);
+                    });
+                })
+                ->when($soPhongTam, function ($query) use ($soPhongTam) {
+                    $query->whereHas('loaiPhong', function ($loaiPhongQuery) use ($soPhongTam) {
+                        $loaiPhongQuery->where('so_phong_tam', '>=', $soPhongTam);
+                    });
+                })
+                ->when($dienTichTu, function ($query) use ($dienTichTu) {
+                    $query->whereHas('loaiPhong', function ($loaiPhongQuery) use ($dienTichTu) {
+                        $loaiPhongQuery->where('dien_tich', '>=', $dienTichTu);
+                    });
+                })
+                ->when($dienTichDen, function ($query) use ($dienTichDen) {
+                    $query->whereHas('loaiPhong', function ($loaiPhongQuery) use ($dienTichDen) {
+                        $loaiPhongQuery->where('dien_tich', '<=', $dienTichDen);
+                    });
+                })
+                ->when($tangTu, fn ($query) => $query->where('tang', '>=', $tangTu))
+                ->when($tangDen, fn ($query) => $query->where('tang', '<=', $tangDen))
+                ->when($coAnh, fn ($query) => $query->coAnh())
+                ->when($request->has('co_ban_cong'), function ($query) use ($coBanCong) {
+                    $query->whereHas('loaiPhong', function ($loaiPhongQuery) use ($coBanCong) {
+                        $loaiPhongQuery->where('co_ban_cong', $coBanCong);
+                    });
+                })
+                ->when($request->has('co_bep_rieng'), function ($query) use ($coBepRieng) {
+                    $query->whereHas('loaiPhong', function ($loaiPhongQuery) use ($coBepRieng) {
+                        $loaiPhongQuery->where('co_bep_rieng', $coBepRieng);
+                    });
+                })
+                ->when($request->has('co_huong_bien'), function ($query) use ($coHuongBien) {
+                    $query->whereHas('loaiPhong', function ($loaiPhongQuery) use ($coHuongBien) {
+                        $loaiPhongQuery->where('co_huong_bien', $coHuongBien);
+                    });
+                })
+                ->when($giaTu !== null, function ($query) use ($giaTu) {
+                    $this->apDungBoLocGiaPhong($query, '>=', $giaTu);
+                })
+                ->when($giaDen !== null, function ($query) use ($giaDen) {
+                    $this->apDungBoLocGiaPhong($query, '<=', $giaDen);
+                });
+
+            $this->apDungSapXepPhong($danhSachPhong, $sapXep);
+
+            $danhSachPhong = $danhSachPhong
                 ->paginate(9)
                 ->withQueryString();
+
+            $danhSachLoaiPhong = LoaiPhong::query()
+                ->where('trang_thai', 'hoat_dong')
+                ->orderBy('ten_loai_phong')
+                ->get();
         } catch (QueryException $exception) {
             if (!$this->laLoiThieuBang($exception)) {
                 throw $exception;
@@ -70,8 +180,35 @@ class PublicBookingController extends Controller
                     'query' => $request->query(),
                 ],
             );
+
+            $danhSachLoaiPhong = collect();
         }
 
+        $boLoc = [
+            'ngay_nhan' => $ngayNhan,
+            'ngay_tra' => $ngayTra,
+            'so_khach' => $soKhach,
+            'tu_khoa' => $tuKhoa,
+            'loai_phong_id' => $loaiPhongId,
+            'gia_tu' => $giaTu,
+            'gia_den' => $giaDen,
+            'so_giuong' => $soGiuong,
+            'loai_giuong' => $loaiGiuong,
+            'so_phong_tam' => $soPhongTam,
+            'dien_tich_tu' => $dienTichTu,
+            'dien_tich_den' => $dienTichDen,
+            'tang_tu' => $tangTu,
+            'tang_den' => $tangDen,
+            'co_anh' => $coAnh,
+            'co_ban_cong' => $coBanCong,
+            'co_bep_rieng' => $coBepRieng,
+            'co_huong_bien' => $coHuongBien,
+            'sap_xep' => $sapXep,
+        ];
+
+        $danhSachLoaiGiuong = $this->taoDanhSachLoaiGiuong($danhSachLoaiPhong);
+        $soBoLocNangCao = $this->demBoLocNangCao($request, $boLoc);
+        $tomTatBoLoc = $this->taoTomTatBoLocPortal($danhSachLoaiPhong, $boLoc);
         $danhSachDonCuaToi = collect();
 
         if (auth()->check() && auth()->user()->vai_tro === 'khach_hang') {
@@ -83,18 +220,22 @@ class PublicBookingController extends Controller
                     ->where('khach_hang_id', $khachHangDangNhap->id)
                     ->latest('id')
                     ->take(8)
-                    ->get();
+                    ->get()
+                    ->map(fn (DatPhong $datPhong) => $this->boSungThongTinTuDongXuLyKhachDat($datPhong));
             }
         }
 
         return view('booking.index', [
             'danhSachPhong' => $danhSachPhong,
+            'danhSachLoaiPhong' => $danhSachLoaiPhong,
+            'danhSachLoaiGiuong' => $danhSachLoaiGiuong,
             'danhSachDonCuaToi' => $danhSachDonCuaToi,
-            'boLoc' => [
-                'ngay_nhan' => $ngayNhan,
-                'ngay_tra' => $ngayTra,
-                'so_khach' => $soKhach,
-            ],
+            'tuyChonSapXep' => $tuyChonSapXep,
+            'tuyChonTienNghi' => $tuyChonTienNghi,
+            'boLoc' => $boLoc,
+            'soBoLocNangCao' => $soBoLocNangCao,
+            'coMoBoLocNangCao' => $soBoLocNangCao > 0,
+            'tomTatBoLoc' => $tomTatBoLoc,
         ]);
     }
 
@@ -202,68 +343,48 @@ class PublicBookingController extends Controller
             return $datPhong;
         });
 
+        $hanTuDongXuLy = DatPhongKhachDatQuaHan::layHanXuLy($datPhong);
+        $thongBao = 'Đặt phòng thành công. Mã đặt phòng của bạn là ' . $datPhong->ma_dat_phong . '. Chúng tôi sẽ liên hệ để xác nhận.';
+
+        if ($hanTuDongXuLy) {
+            $thongBao .= ' Nếu quá ' . $hanTuDongXuLy->format('H:i d/m/Y') . ' mà chưa đến, hệ thống sẽ tự động xử lý đơn theo trạng thái xác nhận.';
+        }
+
         return redirect()
             ->route('booking.index')
-            ->with('success', 'Đặt phòng thành công. Mã đặt phòng của bạn là ' . $datPhong->ma_dat_phong . '. Chúng tôi sẽ liên hệ để xác nhận.');
+            ->with('success', $thongBao);
     }
 
     public function showTaiKhoan()
     {
-        $khachHang = $this->boSungThongTinHoSoKhachHang(
-            $this->layKhachHangDangNhap()->load([
-                'datPhong' => function ($query) {
-                    $query
-                        ->with(['chiTietDatPhong.phong', 'hoaDon.thanhToan'])
-                        ->latest('id');
-                },
-            ])
-        );
-
-        $danhSachHoaDon = HoaDon::query()
-            ->with([
-                'datPhong.chiTietDatPhong.phong',
-                'thanhToan.nguoiXuLy',
-            ])
-            ->whereHas('datPhong', function ($query) use ($khachHang) {
-                $query->where('khach_hang_id', $khachHang->id);
+        $khachHang = $this->layKhachHangDaTaiDuLieuPortal();
+        $danhSachHoaDon = $this->layDanhSachHoaDonKhachHang($khachHang);
+        $thongKe = $this->taoThongKePortalKhachHang($khachHang, $danhSachHoaDon);
+        $hoaDonCanChuY = $danhSachHoaDon
+            ->filter(function (HoaDon $hoaDon) {
+                return (float) $hoaDon->so_tien_con_lai > 0
+                    || (float) $hoaDon->so_tien_cho_xu_ly > 0;
             })
-            ->latest('id')
-            ->get()
-            ->map(function (HoaDon $hoaDon) {
-                $hoaDon->dongBoGiaTriTuDatPhong(false);
-
-                $soTienDaThanhToan = $hoaDon->tinhTongTienDaThu();
-                $soTienChoXuLy = $hoaDon->tinhTongTienChoXuLy();
-
-                $hoaDon->setAttribute('so_tien_da_thanh_toan', $soTienDaThanhToan);
-                $hoaDon->setAttribute('so_tien_cho_xu_ly', $soTienChoXuLy);
-                $hoaDon->setAttribute('so_tien_con_lai', max(0, (float) $hoaDon->tong_tien - $soTienDaThanhToan));
-
-                return $hoaDon;
-            });
-
-        $danhSachThanhToan = ThanhToan::query()
-            ->with(['hoaDon.datPhong', 'nguoiXuLy'])
-            ->whereHas('hoaDon.datPhong', function ($query) use ($khachHang) {
-                $query->where('khach_hang_id', $khachHang->id);
-            })
-            ->latest('id')
-            ->take(10)
-            ->get();
-
-        $thongKe = [
-            'tong_luot_dat' => $khachHang->datPhong->count(),
-            'don_sap_toi' => $khachHang->datPhong
-                ->whereIn('trang_thai', ['cho_xac_nhan', 'da_xac_nhan', 'da_nhan_phong'])
-                ->count(),
-            'tong_hoa_don' => $danhSachHoaDon->count(),
-            'tong_da_thanh_toan' => (float) $danhSachHoaDon->sum('so_tien_da_thanh_toan'),
-            'tong_cho_xu_ly' => (float) $danhSachHoaDon->sum('so_tien_cho_xu_ly'),
-            'tong_con_lai' => (float) $danhSachHoaDon->sum('so_tien_con_lai'),
-            'phan_tram_ho_so' => (int) $khachHang->phan_tram_ho_so,
-        ];
+            ->take(3)
+            ->values();
 
         return view('booking.account', [
+            'khachHang' => $khachHang,
+            'taiKhoan' => auth()->user(),
+            'danhSachDatPhong' => $khachHang->datPhong->take(8),
+            'hoaDonCanChuY' => $hoaDonCanChuY,
+            'thongKe' => $thongKe,
+        ]);
+    }
+
+    public function showThanhToan()
+    {
+        $khachHang = $this->layKhachHangDaTaiDuLieuPortal();
+        $danhSachHoaDon = $this->layDanhSachHoaDonKhachHang($khachHang);
+        $danhSachThanhToan = $this->layDanhSachThanhToanKhachHang($khachHang);
+        $thongKe = $this->taoThongKePortalKhachHang($khachHang, $danhSachHoaDon);
+
+        return view('booking.payments', [
             'khachHang' => $khachHang,
             'taiKhoan' => auth()->user(),
             'danhSachDatPhong' => $khachHang->datPhong->take(8),
@@ -333,7 +454,7 @@ class PublicBookingController extends Controller
             ->with('success', 'Đã cập nhật thông tin khách hàng thành công.');
     }
 
-    public function showHoaDon(HoaDon $hoaDon)
+    public function showHoaDon(Request $request, HoaDon $hoaDon)
     {
         $khachHangDangNhap = $this->layKhachHangDangNhap();
         $this->xacThucHoaDonThuocKhachDangNhap($hoaDon, $khachHangDangNhap);
@@ -351,14 +472,125 @@ class PublicBookingController extends Controller
         $soTienDaThanhToan = $hoaDon->tinhTongTienDaThu();
         $soTienChoXuLy = $hoaDon->tinhTongTienChoXuLy();
         $tongTien = (float) $hoaDon->tong_tien;
+        $soTienConLai = max(0, $tongTien - $soTienDaThanhToan);
+        $soTienConLaiCoTheGuiYeuCau = max(0, $tongTien - $soTienDaThanhToan - $soTienChoXuLy);
+        $goiYDatCoc = $hoaDon->datPhong?->tinhTienCocGoiY() ?? 0;
+        $soTienConThieuCoc = max(0, $goiYDatCoc - $soTienDaThanhToan - $soTienChoXuLy);
+        $coTheDatCoc = $hoaDon->datPhong
+            && in_array(
+                $hoaDon->datPhong->trang_thai,
+                [DatPhong::TRANG_THAI_CHO_XAC_NHAN, DatPhong::TRANG_THAI_DA_XAC_NHAN],
+                true
+            )
+            && $goiYDatCoc > 0
+            && $soTienConThieuCoc > 0;
+        $cheDoMacDinhThanhToan = $request->input('che_do') === 'coc' && $coTheDatCoc
+            ? 'coc_phong'
+            : 'thanh_toan_them';
 
         return view('booking.hoa_don', [
             'hoaDon' => $hoaDon,
             'soTienDaThanhToan' => $soTienDaThanhToan,
             'soTienChoXuLy' => $soTienChoXuLy,
-            'soTienConLai' => max(0, $tongTien - $soTienDaThanhToan),
-            'soTienConLaiCoTheGuiYeuCau' => max(0, $tongTien - $soTienDaThanhToan - $soTienChoXuLy),
+            'soTienConLai' => $soTienConLai,
+            'soTienConLaiCoTheGuiYeuCau' => $soTienConLaiCoTheGuiYeuCau,
+            'goiYDatCoc' => $goiYDatCoc,
+            'soTienConThieuCoc' => $soTienConThieuCoc,
+            'coTheDatCoc' => $coTheDatCoc,
+            'cheDoMacDinhThanhToan' => $cheDoMacDinhThanhToan,
+            'soTienMacDinhChoCoc' => min($soTienConLaiCoTheGuiYeuCau, $soTienConThieuCoc),
+            'soTienMacDinhChoThanhToan' => $soTienConLaiCoTheGuiYeuCau,
         ]);
+    }
+
+    private function layKhachHangDaTaiDuLieuPortal(): KhachHang
+    {
+        $khachHang = $this->boSungThongTinHoSoKhachHang(
+            $this->layKhachHangDangNhap()->load([
+                'datPhong' => function ($query) {
+                    $query
+                        ->with(['chiTietDatPhong.phong', 'hoaDon.thanhToan'])
+                        ->latest('id');
+                },
+            ])
+        );
+
+        $khachHang->setRelation(
+            'datPhong',
+            $khachHang->datPhong->map(fn (DatPhong $datPhong) => $this->boSungThongTinTuDongXuLyKhachDat($datPhong))
+        );
+
+        return $khachHang;
+    }
+
+    private function layDanhSachHoaDonKhachHang(KhachHang $khachHang): Collection
+    {
+        return HoaDon::query()
+            ->with([
+                'datPhong.chiTietDatPhong.phong',
+                'datPhong.suDungDichVu',
+                'thanhToan.nguoiXuLy',
+            ])
+            ->whereHas('datPhong', function ($query) use ($khachHang) {
+                $query->where('khach_hang_id', $khachHang->id);
+            })
+            ->latest('id')
+            ->get()
+            ->map(fn (HoaDon $hoaDon) => $this->ganChiSoThanhToanChoHoaDon($hoaDon));
+    }
+
+    private function layDanhSachThanhToanKhachHang(KhachHang $khachHang): Collection
+    {
+        return ThanhToan::query()
+            ->with(['hoaDon.datPhong', 'nguoiXuLy'])
+            ->whereHas('hoaDon.datPhong', function ($query) use ($khachHang) {
+                $query->where('khach_hang_id', $khachHang->id);
+            })
+            ->latest('id')
+            ->take(10)
+            ->get();
+    }
+
+    private function taoThongKePortalKhachHang(KhachHang $khachHang, Collection $danhSachHoaDon): array
+    {
+        return [
+            'tong_luot_dat' => $khachHang->datPhong->count(),
+            'don_sap_toi' => $khachHang->datPhong
+                ->whereIn('trang_thai', ['cho_xac_nhan', 'da_xac_nhan', 'da_nhan_phong'])
+                ->count(),
+            'tong_hoa_don' => $danhSachHoaDon->count(),
+            'tong_da_thanh_toan' => (float) $danhSachHoaDon->sum('so_tien_da_thanh_toan'),
+            'tong_cho_xu_ly' => (float) $danhSachHoaDon->sum('so_tien_cho_xu_ly'),
+            'tong_con_lai' => (float) $danhSachHoaDon->sum('so_tien_con_lai'),
+            'phan_tram_ho_so' => (int) $khachHang->phan_tram_ho_so,
+        ];
+    }
+
+    private function ganChiSoThanhToanChoHoaDon(HoaDon $hoaDon): HoaDon
+    {
+        $hoaDon->dongBoGiaTriTuDatPhong(false);
+
+        $soTienDaThanhToan = $hoaDon->tinhTongTienDaThu();
+        $soTienChoXuLy = $hoaDon->tinhTongTienChoXuLy();
+        $goiYDatCoc = $hoaDon->datPhong?->tinhTienCocGoiY() ?? 0;
+        $soTienConThieuCoc = max(0, $goiYDatCoc - $soTienDaThanhToan - $soTienChoXuLy);
+        $coTheDatCoc = $hoaDon->datPhong
+            && in_array(
+                $hoaDon->datPhong->trang_thai,
+                [DatPhong::TRANG_THAI_CHO_XAC_NHAN, DatPhong::TRANG_THAI_DA_XAC_NHAN],
+                true
+            )
+            && $goiYDatCoc > 0
+            && $soTienConThieuCoc > 0;
+
+        $hoaDon->setAttribute('so_tien_da_thanh_toan', $soTienDaThanhToan);
+        $hoaDon->setAttribute('so_tien_cho_xu_ly', $soTienChoXuLy);
+        $hoaDon->setAttribute('so_tien_con_lai', max(0, (float) $hoaDon->tong_tien - $soTienDaThanhToan));
+        $hoaDon->setAttribute('goi_y_tien_coc', $goiYDatCoc);
+        $hoaDon->setAttribute('so_tien_con_thieu_coc', $soTienConThieuCoc);
+        $hoaDon->setAttribute('co_the_dat_coc', $coTheDatCoc);
+
+        return $hoaDon;
     }
 
     private function phongConTrong(int $phongId, string $ngayNhan, string $ngayTra): bool
@@ -511,6 +743,15 @@ class PublicBookingController extends Controller
         return $khachHang;
     }
 
+    private function boSungThongTinTuDongXuLyKhachDat(DatPhong $datPhong): DatPhong
+    {
+        foreach (DatPhongKhachDatQuaHan::taoChiSoHienThi($datPhong) as $thuocTinh => $giaTri) {
+            $datPhong->setAttribute($thuocTinh, $giaTri);
+        }
+
+        return $datPhong;
+    }
+
     private function taoMaDatPhong(): string
     {
         do {
@@ -527,6 +768,284 @@ class PublicBookingController extends Controller
         } while (KhachHang::query()->where('ma_khach_hang', $maKhachHang)->exists());
 
         return $maKhachHang;
+    }
+
+    private function apDungBoLocGiaPhong($query, string $toanTu, float $giaTri): void
+    {
+        $query->where(function ($giaQuery) use ($toanTu, $giaTri) {
+            $giaQuery
+                ->where('gia_mac_dinh', $toanTu, $giaTri)
+                ->orWhere(function ($duPhongQuery) use ($toanTu, $giaTri) {
+                    $duPhongQuery
+                        ->whereNull('gia_mac_dinh')
+                        ->whereHas('loaiPhong', function ($loaiPhongQuery) use ($toanTu, $giaTri) {
+                            $loaiPhongQuery->where('gia_mot_dem', $toanTu, $giaTri);
+                        });
+                });
+        });
+    }
+
+    private function apDungSapXepPhong($query, string $sapXep): void
+    {
+        $bieuThucGia = "COALESCE(phong.gia_mac_dinh, (SELECT loai_phong.gia_mot_dem FROM loai_phong WHERE loai_phong.id = phong.loai_phong_id))";
+        $bieuThucDienTich = "(SELECT loai_phong.dien_tich FROM loai_phong WHERE loai_phong.id = phong.loai_phong_id)";
+        $bieuThucSucChua = "(SELECT loai_phong.so_nguoi_toi_da FROM loai_phong WHERE loai_phong.id = phong.loai_phong_id)";
+
+        match ($sapXep) {
+            'gia_tang' => $query->orderByRaw($bieuThucGia . ' asc')->orderBy('so_phong'),
+            'gia_giam' => $query->orderByRaw($bieuThucGia . ' desc')->orderBy('so_phong'),
+            'dien_tich_giam' => $query->orderByRaw($bieuThucDienTich . ' desc')->orderBy('so_phong'),
+            'suc_chua_giam' => $query->orderByRaw($bieuThucSucChua . ' desc')->orderBy('so_phong'),
+            default => $query->orderBy('so_phong'),
+        };
+    }
+
+    private function taoDanhSachLoaiGiuong(Collection $danhSachLoaiPhong): Collection
+    {
+        return $danhSachLoaiPhong
+            ->pluck('loai_giuong')
+            ->filter(fn ($loaiGiuong) => is_string($loaiGiuong) && trim($loaiGiuong) !== '')
+            ->map(fn (string $loaiGiuong) => trim($loaiGiuong))
+            ->unique()
+            ->sort()
+            ->values();
+    }
+
+    private function demBoLocNangCao(Request $request, array $boLoc): int
+    {
+        return collect([
+            $boLoc['loai_phong_id'] !== null,
+            $boLoc['gia_tu'] !== null,
+            $boLoc['gia_den'] !== null,
+            $boLoc['so_giuong'] !== null,
+            $boLoc['loai_giuong'] !== null,
+            $boLoc['so_phong_tam'] !== null,
+            $boLoc['dien_tich_tu'] !== null,
+            $boLoc['dien_tich_den'] !== null,
+            $boLoc['tang_tu'] !== null,
+            $boLoc['tang_den'] !== null,
+            $boLoc['co_anh'],
+            $request->has('co_ban_cong'),
+            $request->has('co_bep_rieng'),
+            $request->has('co_huong_bien'),
+        ])->filter()->count();
+    }
+
+    private function taoTomTatBoLoc(Collection $danhSachLoaiPhong, array $boLoc): array
+    {
+        $tomTat = [];
+        $tenLoaiPhong = $danhSachLoaiPhong
+            ->firstWhere('id', $boLoc['loai_phong_id'])
+            ?->ten_loai_phong;
+
+        if ($boLoc['tu_khoa'] !== '') {
+            $tomTat[] = 'Từ khóa: ' . $boLoc['tu_khoa'];
+        }
+
+        if ($boLoc['ngay_nhan']) {
+            $tomTat[] = 'Nhận phòng ' . Carbon::parse($boLoc['ngay_nhan'])->format('d/m/Y');
+        }
+
+        if ($boLoc['ngay_tra']) {
+            $tomTat[] = 'Trả phòng ' . Carbon::parse($boLoc['ngay_tra'])->format('d/m/Y');
+        }
+
+        if ($boLoc['so_khach']) {
+            $tomTat[] = $boLoc['so_khach'] . ' khách';
+        }
+
+        if ($tenLoaiPhong) {
+            $tomTat[] = 'Loại: ' . $tenLoaiPhong;
+        }
+
+        if ($boLoc['gia_tu'] !== null) {
+            $tomTat[] = 'Giá từ ' . number_format($boLoc['gia_tu'], 0, ',', '.') . ' VND';
+        }
+
+        if ($boLoc['gia_den'] !== null) {
+            $tomTat[] = 'Giá đến ' . number_format($boLoc['gia_den'], 0, ',', '.') . ' VND';
+        }
+
+        if ($boLoc['so_giuong'] !== null) {
+            $tomTat[] = 'Từ ' . $boLoc['so_giuong'] . ' giường';
+        }
+
+        if ($boLoc['loai_giuong']) {
+            $tomTat[] = 'Giường ' . $boLoc['loai_giuong'];
+        }
+
+        if ($boLoc['so_phong_tam'] !== null) {
+            $tomTat[] = 'Từ ' . $boLoc['so_phong_tam'] . ' phòng tắm';
+        }
+
+        if ($boLoc['dien_tich_tu'] !== null) {
+            $tomTat[] = 'Từ ' . number_format($boLoc['dien_tich_tu'], 0, ',', '.') . ' m²';
+        }
+
+        if ($boLoc['tang'] !== null) {
+            $tomTat[] = 'Tầng ' . $boLoc['tang'];
+        }
+
+        if ($boLoc['co_anh']) {
+            $tomTat[] = 'Có ảnh';
+        }
+
+        if ($boLoc['co_anh']) {
+            $tomTat[] = 'Có ảnh';
+        }
+
+        if ($boLoc['co_ban_cong']) {
+            $tomTat[] = 'Có ban công';
+        }
+
+        if ($boLoc['co_bep_rieng']) {
+            $tomTat[] = 'Có bếp riêng';
+        }
+
+        if ($boLoc['co_huong_bien']) {
+            $tomTat[] = 'Hướng biển';
+        }
+
+        if (($boLoc['sap_xep'] ?? 'so_phong') !== 'so_phong') {
+            $tomTat[] = 'Sắp xếp: ' . $this->layNhanSapXep($boLoc['sap_xep']);
+        }
+
+        return $tomTat;
+    }
+
+    private function layNhanSapXep(string $sapXep): string
+    {
+        return match ($sapXep) {
+            'gia_tang' => 'Giá thấp đến cao',
+            'gia_giam' => 'Giá cao đến thấp',
+            'dien_tich_giam' => 'Diện tích lớn trước',
+            default => 'Theo số phòng',
+        };
+    }
+
+    private function taoTomTatBoLocPortal(Collection $danhSachLoaiPhong, array $boLoc): array
+    {
+        $tomTat = [];
+        $tenLoaiPhong = $danhSachLoaiPhong
+            ->firstWhere('id', $boLoc['loai_phong_id'])
+            ?->ten_loai_phong;
+
+        if ($boLoc['tu_khoa'] !== '') {
+            $tomTat[] = 'Từ khóa: ' . $boLoc['tu_khoa'];
+        }
+
+        if ($boLoc['ngay_nhan']) {
+            $tomTat[] = 'Nhận phòng ' . Carbon::parse($boLoc['ngay_nhan'])->format('d/m/Y');
+        }
+
+        if ($boLoc['ngay_tra']) {
+            $tomTat[] = 'Trả phòng ' . Carbon::parse($boLoc['ngay_tra'])->format('d/m/Y');
+        }
+
+        if ($boLoc['so_khach']) {
+            $tomTat[] = $boLoc['so_khach'] . ' khách';
+        }
+
+        if ($tenLoaiPhong) {
+            $tomTat[] = 'Loại: ' . $tenLoaiPhong;
+        }
+
+        if ($boLoc['gia_tu'] !== null) {
+            $tomTat[] = 'Giá từ ' . number_format($boLoc['gia_tu'], 0, ',', '.') . ' VND';
+        }
+
+        if ($boLoc['gia_den'] !== null) {
+            $tomTat[] = 'Giá đến ' . number_format($boLoc['gia_den'], 0, ',', '.') . ' VND';
+        }
+
+        if ($boLoc['so_giuong'] !== null) {
+            $tomTat[] = 'Từ ' . $boLoc['so_giuong'] . ' giường';
+        }
+
+        if ($boLoc['loai_giuong']) {
+            $tomTat[] = 'Giường ' . $boLoc['loai_giuong'];
+        }
+
+        if ($boLoc['so_phong_tam'] !== null) {
+            $tomTat[] = 'Từ ' . $boLoc['so_phong_tam'] . ' phòng tắm';
+        }
+
+        if ($boLoc['dien_tich_tu'] !== null || $boLoc['dien_tich_den'] !== null) {
+            $tomTat[] = $this->taoNhanKhoangPortal('Diện tích', $boLoc['dien_tich_tu'], $boLoc['dien_tich_den'], 'm²');
+        }
+
+        if ($boLoc['tang_tu'] !== null || $boLoc['tang_den'] !== null) {
+            $tomTat[] = $this->taoNhanKhoangPortal('Tầng', $boLoc['tang_tu'], $boLoc['tang_den']);
+        }
+
+        if ($boLoc['co_ban_cong']) {
+            $tomTat[] = 'Có ban công';
+        }
+
+        if ($boLoc['co_bep_rieng']) {
+            $tomTat[] = 'Có bếp riêng';
+        }
+
+        if ($boLoc['co_huong_bien']) {
+            $tomTat[] = 'Hướng biển';
+        }
+
+        if (($boLoc['sap_xep'] ?? 'so_phong') !== 'so_phong') {
+            $tomTat[] = 'Sắp xếp: ' . $this->layNhanSapXepPortal($boLoc['sap_xep']);
+        }
+
+        return $tomTat;
+    }
+
+    private function layNhanSapXepPortal(string $sapXep): string
+    {
+        return match ($sapXep) {
+            'gia_tang' => 'Giá thấp đến cao',
+            'gia_giam' => 'Giá cao đến thấp',
+            'dien_tich_giam' => 'Diện tích lớn trước',
+            'suc_chua_giam' => 'Sức chứa lớn trước',
+            default => 'Theo số phòng',
+        };
+    }
+
+    private function taoNhanKhoangPortal(string $nhan, float|int|null $tu, float|int|null $den, ?string $donVi = null): string
+    {
+        $dinhDang = function (float|int $giaTri) use ($donVi): string {
+            $noiDung = number_format((float) $giaTri, 0, ',', '.');
+
+            return $donVi ? $noiDung . ' ' . $donVi : $noiDung;
+        };
+
+        if ($tu !== null && $den !== null) {
+            return $nhan . ' ' . $dinhDang($tu) . ' - ' . $dinhDang($den);
+        }
+
+        if ($tu !== null) {
+            return $nhan . ' từ ' . $dinhDang($tu);
+        }
+
+        return $nhan . ' đến ' . $dinhDang((float) $den);
+    }
+
+    private function layTuyChonSapXepPortal(): array
+    {
+        return [
+            'so_phong' => 'Theo số phòng',
+            'gia_tang' => 'Giá thấp đến cao',
+            'gia_giam' => 'Giá cao đến thấp',
+            'dien_tich_giam' => 'Diện tích lớn trước',
+            'suc_chua_giam' => 'Sức chứa lớn trước',
+        ];
+    }
+
+    private function layTuyChonTienNghiPortal(): array
+    {
+        return [
+            'co_anh' => 'Có ảnh',
+            'co_ban_cong' => 'Có ban công',
+            'co_bep_rieng' => 'Có bếp riêng',
+            'co_huong_bien' => 'Hướng biển',
+        ];
     }
 
     private function laLoiThieuBang(QueryException $exception): bool

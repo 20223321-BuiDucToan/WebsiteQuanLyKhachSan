@@ -5,23 +5,11 @@
 @section('content')
 <div>
     <h1 class="auth-card-title">Đặt lại mật khẩu</h1>
-    <p class="auth-card-subtitle">Nhập thông tin xác thực và mật khẩu mới để khôi phục tài khoản.</p>
+    <p class="auth-card-subtitle">Tạo mật khẩu mới cho tài khoản của bạn. Liên kết chỉ dùng được một lần.</p>
 
     <form action="{{ route('password.update') }}" method="POST">
         @csrf
         <input type="hidden" name="token" value="{{ $token }}">
-
-        <div class="mb-3">
-            <label class="form-label">Tên đăng nhập</label>
-            <input
-                type="text"
-                name="ten_dang_nhap"
-                class="form-control"
-                value="{{ old('ten_dang_nhap', $ten_dang_nhap) }}"
-                placeholder="Nhập tên đăng nhập"
-                required
-            >
-        </div>
 
         <div class="mb-3">
             <label class="form-label">Email</label>
@@ -30,7 +18,7 @@
                 name="email"
                 class="form-control"
                 value="{{ old('email', $email) }}"
-                placeholder="Nhập email"
+                readonly
                 required
             >
         </div>
@@ -41,9 +29,11 @@
                 type="password"
                 name="password"
                 class="form-control"
-                placeholder="Nhập mật khẩu mới"
+                placeholder="Tối thiểu 8 ký tự"
                 required
+                autofocus
             >
+            <div class="small text-muted mt-2">Nên dùng chữ hoa, chữ thường, số và ký tự đặc biệt.</div>
         </div>
 
         <div class="mb-4">

@@ -10,121 +10,130 @@
     $phongDangCoDatPhong = $phongHienTai?->coDatPhongHoatDong() ?? false;
 @endphp
 
-<div class="row g-4">
-    <div class="col-md-4">
-        <label class="form-label">Số phòng</label>
-        <input
-            type="text"
-            name="so_phong"
-            class="form-control @error('so_phong') is-invalid @enderror"
-            value="{{ old('so_phong', $phongHienTai?->so_phong ?? '') }}"
-            required
-        >
-        @error('so_phong')
-            <div class="invalid-feedback">{{ $message }}</div>
-        @enderror
-    </div>
+<div class="d-grid gap-3">
+    <section class="form-section">
+        <h3 class="form-section__title">Thông tin phòng</h3>
+        <p class="form-section__description">Nhập số phòng, chọn loại phòng và giá mặc định để dễ kiểm soát bán phòng theo từng khu vực.</p>
 
-    <div class="col-md-4">
-        <label class="form-label">Loại phòng</label>
-        <select name="loai_phong_id" class="form-select @error('loai_phong_id') is-invalid @enderror" required>
-            <option value="">-- Chọn loại phòng --</option>
-            @foreach($danhSachLoaiPhong as $loaiPhong)
-                <option value="{{ $loaiPhong->id }}" @selected((string) old('loai_phong_id', $phongHienTai?->loai_phong_id ?? '') === (string) $loaiPhong->id)>
-                    {{ $loaiPhong->ten_loai_phong }} ({{ number_format((float) $loaiPhong->gia_mot_dem, 0, ',', '.') }} VNĐ/đêm)
-                </option>
-            @endforeach
-        </select>
-        @error('loai_phong_id')
-            <div class="invalid-feedback">{{ $message }}</div>
-        @enderror
-    </div>
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">Số phòng</label>
+                <input
+                    type="text"
+                    name="so_phong"
+                    class="form-control @error('so_phong') is-invalid @enderror"
+                    value="{{ old('so_phong', $phongHienTai?->so_phong ?? '') }}"
+                    required
+                >
+                @error('so_phong')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
 
-    <div class="col-md-4">
-        <label class="form-label">Tầng</label>
-        <input
-            type="number"
-            min="0"
-            max="100"
-            name="tang"
-            class="form-control @error('tang') is-invalid @enderror"
-            value="{{ old('tang', $phongHienTai?->tang ?? '') }}"
-        >
-        @error('tang')
-            <div class="invalid-feedback">{{ $message }}</div>
-        @enderror
-    </div>
+            <div class="col-md-5">
+                <label class="form-label">Loại phòng</label>
+                <select name="loai_phong_id" class="form-select @error('loai_phong_id') is-invalid @enderror" required>
+                    <option value="">-- Chọn loại phòng --</option>
+                    @foreach($danhSachLoaiPhong as $loaiPhong)
+                        <option value="{{ $loaiPhong->id }}" @selected((string) old('loai_phong_id', $phongHienTai?->loai_phong_id ?? '') === (string) $loaiPhong->id)>
+                            {{ $loaiPhong->ten_loai_phong }} - {{ number_format((float) $loaiPhong->gia_mot_dem, 0, ',', '.') }} VNĐ/đêm
+                        </option>
+                    @endforeach
+                </select>
+                @error('loai_phong_id')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
 
-    <div class="col-md-4">
-        <label class="form-label">Trạng thái phòng</label>
-        <div class="border rounded-4 bg-light px-3 py-3 mb-2">
-            <div class="fw-semibold text-dark">{{ $trangThaiPhongHienThi }}</div>
-            <div class="form-text mt-2 mb-0">Hệ thống tự động đồng bộ theo tình trạng hoạt động, vệ sinh và các đơn đặt phòng đang hiệu lực.</div>
-            @if($phongDangCoDatPhong)
-                <div class="small text-warning mt-2">Phòng đang có đơn hiệu lực nên không thể chuyển sang tạm ngưng.</div>
-            @endif
+            <div class="col-md-2">
+                <label class="form-label">Tầng</label>
+                <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    name="tang"
+                    class="form-control @error('tang') is-invalid @enderror"
+                    value="{{ old('tang', $phongHienTai?->tang ?? '') }}"
+                >
+                @error('tang')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
+
+            <div class="col-md-2">
+                <label class="form-label">Giá mặc định</label>
+                <input
+                    type="number"
+                    min="0"
+                    step="1000"
+                    name="gia_mac_dinh"
+                    class="form-control @error('gia_mac_dinh') is-invalid @enderror"
+                    value="{{ old('gia_mac_dinh', $phongHienTai?->gia_mac_dinh ?? '') }}"
+                >
+                @error('gia_mac_dinh')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
         </div>
-        <select class="d-none" disabled aria-hidden="true" tabindex="-1">
-            <option value="trong" @selected(old('trang_thai', $phongHienTai?->trang_thai ?? 'trong') === 'trong')>Trống</option>
-            <option value="da_dat" @selected(old('trang_thai', $phongHienTai?->trang_thai ?? '') === 'da_dat')>Đã đặt</option>
-            <option value="dang_su_dung" @selected(old('trang_thai', $phongHienTai?->trang_thai ?? '') === 'dang_su_dung')>Đang sử dụng</option>
-            <option value="don_dep" @selected(old('trang_thai', $phongHienTai?->trang_thai ?? '') === 'don_dep')>Dọn dẹp</option>
-            <option value="bao_tri" @selected(old('trang_thai', $phongHienTai?->trang_thai ?? '') === 'bao_tri')>Bảo trì</option>
-        </select>
-        @error('trang_thai')
-            <div class="invalid-feedback">{{ $message }}</div>
-        @enderror
-    </div>
+    </section>
 
-    <div class="col-md-4">
-        <label class="form-label">Tình trạng vệ sinh</label>
-        <select name="tinh_trang_ve_sinh" class="form-select @error('tinh_trang_ve_sinh') is-invalid @enderror" required>
-            <option value="sach" @selected(old('tinh_trang_ve_sinh', $phongHienTai?->tinh_trang_ve_sinh ?? 'sach') === 'sach')>Sạch</option>
-            <option value="can_don" @selected(old('tinh_trang_ve_sinh', $phongHienTai?->tinh_trang_ve_sinh ?? '') === 'can_don')>Cần dọn</option>
-            <option value="dang_don" @selected(old('tinh_trang_ve_sinh', $phongHienTai?->tinh_trang_ve_sinh ?? '') === 'dang_don')>Đang dọn</option>
-            <option value="ban" @selected(old('tinh_trang_ve_sinh', $phongHienTai?->tinh_trang_ve_sinh ?? '') === 'ban')>Bẩn</option>
-        </select>
-        @error('tinh_trang_ve_sinh')
-            <div class="invalid-feedback">{{ $message }}</div>
-        @enderror
-    </div>
+    <section class="form-section">
+        <h3 class="form-section__title">Tình trạng vận hành</h3>
+        <p class="form-section__description">Trạng thái hiển thị của phòng được hệ thống tính tự động theo vệ sinh, hoạt động và đơn đặt phòng đang hiệu lực.</p>
 
-    <div class="col-md-4">
-        <label class="form-label">Tình trạng hoạt động</label>
-        <select name="tinh_trang_hoat_dong" class="form-select @error('tinh_trang_hoat_dong') is-invalid @enderror" required>
-            <option value="hoat_dong" @selected(old('tinh_trang_hoat_dong', $phongHienTai?->tinh_trang_hoat_dong ?? 'hoat_dong') === 'hoat_dong')>Hoạt động</option>
-            <option value="tam_ngung" @selected(old('tinh_trang_hoat_dong', $phongHienTai?->tinh_trang_hoat_dong ?? '') === 'tam_ngung')>Tạm ngưng</option>
-        </select>
-        @error('tinh_trang_hoat_dong')
-            <div class="invalid-feedback">{{ $message }}</div>
-        @enderror
-    </div>
+        <div class="row g-3">
+            <div class="col-lg-4">
+                <label class="form-label">Trạng thái hiển thị</label>
+                <div class="field-static">{{ $trangThaiPhongHienThi }}</div>
+                <div class="field-note">Bạn không cần chỉnh tay trạng thái này.</div>
+                @if($phongDangCoDatPhong)
+                    <div class="field-note text-warning">Phòng đang có đơn hiệu lực nên cần giữ trạng thái vận hành ổn định.</div>
+                @endif
+            </div>
 
-    <div class="col-md-6">
-        <label class="form-label">Giá mặc định (VNĐ / đêm)</label>
-        <input
-            type="number"
-            min="0"
-            step="1000"
-            name="gia_mac_dinh"
-            class="form-control @error('gia_mac_dinh') is-invalid @enderror"
-            value="{{ old('gia_mac_dinh', $phongHienTai?->gia_mac_dinh ?? '') }}"
-        >
-        @error('gia_mac_dinh')
-            <div class="invalid-feedback">{{ $message }}</div>
-        @enderror
-    </div>
+            <div class="col-lg-4">
+                <label class="form-label">Tình trạng vệ sinh</label>
+                <select name="tinh_trang_ve_sinh" class="form-select @error('tinh_trang_ve_sinh') is-invalid @enderror" required>
+                    <option value="sach" @selected(old('tinh_trang_ve_sinh', $phongHienTai?->tinh_trang_ve_sinh ?? 'sach') === 'sach')>Sạch</option>
+                    <option value="can_don" @selected(old('tinh_trang_ve_sinh', $phongHienTai?->tinh_trang_ve_sinh ?? '') === 'can_don')>Cần dọn</option>
+                    <option value="dang_don" @selected(old('tinh_trang_ve_sinh', $phongHienTai?->tinh_trang_ve_sinh ?? '') === 'dang_don')>Đang dọn</option>
+                    <option value="ban" @selected(old('tinh_trang_ve_sinh', $phongHienTai?->tinh_trang_ve_sinh ?? '') === 'ban')>Bẩn</option>
+                </select>
+                @error('tinh_trang_ve_sinh')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
 
-    <div class="col-12">
-        <label class="form-label">Ghi chú</label>
-        <textarea name="ghi_chu" rows="3" class="form-control @error('ghi_chu') is-invalid @enderror">{{ old('ghi_chu', $phongHienTai?->ghi_chu ?? '') }}</textarea>
-        @error('ghi_chu')
-            <div class="invalid-feedback">{{ $message }}</div>
-        @enderror
-    </div>
+            <div class="col-lg-4">
+                <label class="form-label">Tình trạng hoạt động</label>
+                <select name="tinh_trang_hoat_dong" class="form-select @error('tinh_trang_hoat_dong') is-invalid @enderror" required>
+                    <option value="hoat_dong" @selected(old('tinh_trang_hoat_dong', $phongHienTai?->tinh_trang_hoat_dong ?? 'hoat_dong') === 'hoat_dong')>Hoạt động</option>
+                    <option value="tam_ngung" @selected(old('tinh_trang_hoat_dong', $phongHienTai?->tinh_trang_hoat_dong ?? '') === 'tam_ngung')>Tạm ngưng</option>
+                </select>
+                @error('tinh_trang_hoat_dong')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
 
-    <div class="col-12">
-        <label class="form-label">Hình ảnh phòng</label>
+            <div class="col-12">
+                <label class="form-label">Ghi chú nội bộ</label>
+                <textarea
+                    name="ghi_chu"
+                    rows="3"
+                    class="form-control @error('ghi_chu') is-invalid @enderror"
+                    placeholder="Ví dụ: phòng gần thang máy, ưu tiên khách gia đình, đang thay thiết bị..."
+                >{{ old('ghi_chu', $phongHienTai?->ghi_chu ?? '') }}</textarea>
+                @error('ghi_chu')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
+        </div>
+    </section>
+
+    <section class="form-section">
+        <h3 class="form-section__title">Hình ảnh phòng</h3>
+        <p class="form-section__description">Phần ảnh được giữ riêng để bạn thêm, xem trước và xoá nhanh mà không làm rối phần thông tin chính.</p>
+
         <div class="room-upload-box">
             <input
                 type="file"
@@ -137,19 +146,17 @@
 
             <div class="room-upload-toolbar">
                 <button type="button" class="btn btn-gradient btn-sm" id="room-upload-select">
-                    <i class="fa-regular fa-images me-2"></i>Chọn / thêm nhiều ảnh
+                    <i class="fa-regular fa-images me-2"></i>Chọn ảnh
                 </button>
                 <button type="button" class="btn btn-soft btn-sm" id="room-upload-reset" disabled>
-                    <i class="fa-solid fa-trash-can me-2"></i>Bỏ danh sách mới
+                    <i class="fa-solid fa-trash-can me-2"></i>Bỏ ảnh mới
                 </button>
             </div>
 
-            <div class="room-upload-summary" id="room-upload-summary">
-                Chưa chọn ảnh mới.
-            </div>
+            <div class="room-upload-summary" id="room-upload-summary">Chưa chọn ảnh mới.</div>
 
-            <div class="form-text mt-2">
-                Bạn có thể chọn nhiều ảnh trong một lần, hoặc bấm nút trên nhiều lần để cộng dồn ảnh trước khi lưu. Mỗi ảnh tối đa 4MB, hỗ trợ JPG, JPEG, PNG, WEBP.
+            <div class="field-note">
+                Bạn có thể chọn nhiều ảnh cùng lúc. Mỗi ảnh tối đa 4MB và hệ thống hỗ trợ JPG, JPEG, PNG, WEBP.
             </div>
 
             @error('anh_phong')
@@ -159,51 +166,51 @@
                 <div class="invalid-feedback d-block">{{ $message }}</div>
             @enderror
         </div>
-    </div>
 
-    @if($danhSachAnhPhong !== [])
-        <div class="col-12">
-            <label class="form-label">Ảnh hiện có</label>
-            <div class="room-image-grid">
-                @foreach($danhSachAnhPhong as $anhPhong)
-                    <label class="existing-room-image {{ in_array($anhPhong, $anhDaChonXoa, true) ? 'is-selected' : '' }}">
-                        <img src="{{ asset($anhPhong) }}" alt="Ảnh phòng {{ $phongHienTai?->so_phong }}">
-                        <span class="existing-room-image__overlay">
-                            <span class="form-check mb-0">
-                                <input
-                                    class="form-check-input"
-                                    type="checkbox"
-                                    name="xoa_anh_phong[]"
-                                    value="{{ $anhPhong }}"
-                                    @checked(in_array($anhPhong, $anhDaChonXoa, true))
-                                >
-                                <span class="form-check-label">Xóa ảnh này</span>
+        @if($danhSachAnhPhong !== [])
+            <div class="mt-3">
+                <label class="form-label">Ảnh đang có</label>
+                <div class="room-image-grid">
+                    @foreach($danhSachAnhPhong as $anhPhong)
+                        <label class="existing-room-image {{ in_array($anhPhong, $anhDaChonXoa, true) ? 'is-selected' : '' }}">
+                            <img src="{{ asset($anhPhong) }}" alt="Ảnh phòng {{ $phongHienTai?->so_phong }}">
+                            <span class="existing-room-image__overlay">
+                                <span class="form-check mb-0">
+                                    <input
+                                        class="form-check-input"
+                                        type="checkbox"
+                                        name="xoa_anh_phong[]"
+                                        value="{{ $anhPhong }}"
+                                        @checked(in_array($anhPhong, $anhDaChonXoa, true))
+                                    >
+                                    <span class="form-check-label">Xóa ảnh này</span>
+                                </span>
                             </span>
-                        </span>
-                    </label>
-                @endforeach
+                        </label>
+                    @endforeach
+                </div>
+                <div class="field-note">Chọn ảnh cần gỡ khỏi phòng rồi bấm lưu thay đổi.</div>
             </div>
-            <div class="form-text mt-2">Chọn ảnh cần gỡ khỏi phòng rồi bấm lưu thay đổi.</div>
-        </div>
-    @endif
+        @endif
 
-    <div class="col-12">
-        <label class="form-label">Ảnh mới đã chọn</label>
-        <div class="room-preview-panel" id="room-upload-preview" data-empty-text="Chưa chọn ảnh mới. Ảnh bạn chọn sẽ hiện ở đây để kiểm tra trước khi lưu.">
-            <div class="room-preview-empty">
-                <i class="fa-regular fa-images me-2"></i>Chưa chọn ảnh mới. Ảnh bạn chọn sẽ hiện ở đây để kiểm tra trước khi lưu.
+        <div class="mt-3">
+            <label class="form-label">Ảnh mới đã chọn</label>
+            <div class="room-preview-panel" id="room-upload-preview" data-empty-text="Chưa chọn ảnh mới. Ảnh bạn chọn sẽ hiện ở đây để kiểm tra trước khi lưu.">
+                <div class="room-preview-empty">
+                    <i class="fa-regular fa-images me-2"></i>Chưa chọn ảnh mới. Ảnh bạn chọn sẽ hiện ở đây để kiểm tra trước khi lưu.
+                </div>
             </div>
         </div>
-    </div>
+    </section>
 </div>
 
 @once
     @push('styles')
         <style>
             .room-upload-box {
-                border: 1px dashed #b8c9dc;
-                border-radius: 18px;
-                background: linear-gradient(180deg, #fbfdff, #f5f9fe);
+                border: 1px dashed #bfd1e3;
+                border-radius: 16px;
+                background: #f9fbfe;
                 padding: 16px;
             }
 
@@ -217,7 +224,7 @@
             .room-upload-summary {
                 margin-top: 12px;
                 color: #24415f;
-                font-weight: 600;
+                font-weight: 700;
             }
 
             .room-image-grid,
@@ -232,7 +239,7 @@
                 position: relative;
                 overflow: hidden;
                 border: 1px solid #d7e3ef;
-                border-radius: 18px;
+                border-radius: 16px;
                 background: #fff;
                 min-height: 170px;
             }
@@ -244,7 +251,7 @@
 
             .existing-room-image:hover {
                 transform: translateY(-2px);
-                box-shadow: 0 12px 26px rgba(15, 41, 68, 0.1);
+                box-shadow: 0 10px 24px rgba(15, 41, 68, 0.08);
             }
 
             .existing-room-image.is-selected {
@@ -281,7 +288,7 @@
 
             .room-preview-panel {
                 border: 1px dashed #c8d7e7;
-                border-radius: 18px;
+                border-radius: 16px;
                 background: #fbfdff;
                 padding: 16px;
             }
@@ -381,7 +388,7 @@
 
                 if (roomUploadSummary) {
                     roomUploadSummary.textContent = tongSoTep > 0
-                        ? 'Đã chọn ' + tongSoTep + ' ảnh mới. Bạn vẫn có thể bấm nút trên để thêm ảnh trước khi lưu.'
+                        ? 'Đã chọn ' + tongSoTep + ' ảnh mới.'
                         : 'Chưa chọn ảnh mới.';
                 }
 

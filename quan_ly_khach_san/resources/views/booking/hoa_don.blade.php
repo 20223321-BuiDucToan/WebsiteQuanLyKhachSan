@@ -25,14 +25,16 @@
         }
 
         .hero-grid,
-        .summary-grid {
+        .summary-grid,
+        .deposit-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
             gap: 14px;
         }
 
         .hero-box,
-        .summary-box {
+        .summary-box,
+        .deposit-box {
             border-radius: 18px;
             border: 1px solid #dbe7f2;
             background: #f9fcff;
@@ -40,7 +42,8 @@
         }
 
         .hero-label,
-        .summary-label {
+        .summary-label,
+        .deposit-label {
             color: #68839f;
             font-size: 0.8rem;
             text-transform: uppercase;
@@ -48,7 +51,8 @@
         }
 
         .hero-value,
-        .summary-value {
+        .summary-value,
+        .deposit-value {
             margin-top: 6px;
             font-size: 1.25rem;
             font-weight: 800;
@@ -93,6 +97,34 @@
             background: #eef3f8;
             color: #4d6278;
         }
+
+        .intent-grid {
+            display: grid;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .intent-card {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            border: 1px solid #d7e3ef;
+            border-radius: 16px;
+            padding: 14px 16px;
+            background: #fbfdff;
+        }
+
+        .quick-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .note-inline {
+            color: #68839f;
+            font-size: 0.86rem;
+        }
     </style>
 @endpush
 
@@ -111,6 +143,11 @@
         ];
         $chipHoaDon = $mapTrangThaiHoaDon[$hoaDon->trang_thai] ?? 'chip-neutral';
         $coTheGuiThanhToan = $hoaDon->trang_thai !== 'da_huy' && $soTienConLaiCoTheGuiYeuCau > 0;
+        $loaiYeuCauDangChon = old('loai_yeu_cau', $cheDoMacDinhThanhToan);
+        $soTienMacDinh = $loaiYeuCauDangChon === 'coc_phong'
+            ? (int) $soTienMacDinhChoCoc
+            : (int) $soTienMacDinhChoThanhToan;
+        $soTienDaGhiNhanChoCoc = max(0, (float) $goiYDatCoc - (float) $soTienConThieuCoc);
     @endphp
 
     <div class="invoice-shell">
@@ -128,7 +165,7 @@
 
                 <div class="d-flex flex-wrap gap-2 align-items-start">
                     <span class="chip-inline {{ $chipHoaDon }}">{{ \App\Support\HienThiGiaTri::nhanGiaTri($hoaDon->trang_thai) }}</span>
-                    <a href="{{ route('booking.account') }}" class="btn btn-outline-secondary rounded-3">Quay lại tài khoản</a>
+                    <a href="{{ route('booking.payments') }}" class="btn btn-outline-secondary rounded-3">Quay lại thanh toán</a>
                 </div>
             </div>
 
@@ -152,13 +189,58 @@
                     </div>
                 </div>
             </div>
+
+            @if($hoaDon->datPhong?->trang_thai === 'khong_den')
+                <div class="alert alert-warning mt-3 mb-0">
+                    Đơn này đã được đánh dấu không đến. Tổng tiền hiện tại là phí no-show, không phải tiền lưu trú đủ kỳ ban đầu.
+                </div>
+            @endif
         </section>
+
+        @if($goiYDatCoc > 0)
+            <section class="invoice-card">
+                <div class="d-flex flex-wrap justify-content-between gap-3 mb-3">
+                    <div>
+                        <h2 class="h5 mb-1">Cọc phòng</h2>
+                        <p class="text-muted mb-0">Khoản cọc cho lịch ở này.</p>
+                    </div>
+                    @if($coTheDatCoc && $coTheGuiThanhToan)
+                        <a href="{{ route('booking.hoa-don.show', ['hoaDon' => $hoaDon, 'che_do' => 'coc']) }}" class="btn btn-outline-primary rounded-3">Điền mức cọc</a>
+                    @endif
+                </div>
+
+                <div class="deposit-grid">
+                    <div class="deposit-box">
+                        <div class="deposit-label">Mức cọc gợi ý</div>
+                        <div class="deposit-value">{{ number_format((float) $goiYDatCoc, 0, ',', '.') }} VNĐ</div>
+                    </div>
+                    <div class="deposit-box">
+                        <div class="deposit-label">Đã ghi nhận cho cọc</div>
+                        <div class="deposit-value text-success">{{ number_format((float) $soTienDaGhiNhanChoCoc, 0, ',', '.') }} VNĐ</div>
+                    </div>
+                    <div class="deposit-box">
+                        <div class="deposit-label">Còn thiếu để đủ cọc</div>
+                        <div class="deposit-value {{ $soTienConThieuCoc > 0 ? 'text-warning' : 'text-success' }}">
+                            {{ number_format((float) $soTienConThieuCoc, 0, ',', '.') }} VNĐ
+                        </div>
+                    </div>
+                </div>
+
+                <div class="note-inline mt-3">
+                    @if($coTheDatCoc)
+                        Vẫn có thể chọn thanh toán thêm ở form bên dưới.
+                    @else
+                        Khoản cọc này đã đủ.
+                    @endif
+                </div>
+            </section>
+        @endif
 
         <section class="invoice-card">
             <div class="d-flex flex-wrap justify-content-between gap-3 mb-3">
                 <div>
                     <h2 class="h5 mb-1">Tổng hợp công nợ</h2>
-                    <p class="text-muted mb-0">Khách gửi yêu cầu thanh toán, hệ thống sẽ chờ đối soát trước khi cộng vào hóa đơn.</p>
+                    <p class="text-muted mb-0">Các khoản trên hóa đơn.</p>
                 </div>
                 <div class="text-muted small">
                     Xuất lúc {{ optional($hoaDon->thoi_diem_xuat)->format('d/m/Y H:i') ?? '-' }}
@@ -196,29 +278,65 @@
                         <div class="alert alert-secondary mb-0">Hóa đơn đã hủy nên không thể tiếp tục gửi yêu cầu thanh toán.</div>
                     @elseif(!$coTheGuiThanhToan)
                         <h2 class="h5 mb-2">Thanh toán đã hoàn tất</h2>
-                        <p class="text-muted small">Hóa đơn này đã đủ tiền hoặc đã có đủ giao dịch chờ đối soát, bạn chỉ cần theo dõi lịch sử xử lý bên dưới.</p>
-                        <div class="alert alert-success mb-0">Hóa đơn đã đủ yêu cầu thanh toán và không còn phần nào có thể gửi thêm.</div>
+                        <p class="text-muted small">Hóa đơn này đã đủ tiền.</p>
+                        <div class="alert alert-success mb-0">Không còn khoản nào có thể gửi thêm.</div>
                     @else
                         <h2 class="h5 mb-2">Gửi yêu cầu thanh toán</h2>
                         <p class="text-muted small">
-                            Dùng cho chuyển khoản, thẻ hoặc ví điện tử. Sau khi gửi, giao dịch sẽ vào trạng thái chờ xử lý để bộ phận nội bộ đối soát.
+                            Chọn loại giao dịch rồi gửi yêu cầu.
                         </p>
 
                         <form method="POST" action="{{ route('booking.thanh-toan.store', $hoaDon) }}" class="row g-3">
                             @csrf
 
                             <div class="col-12">
-                                <label class="form-label">Số tiền gửi đối soát</label>
+                                <label class="form-label">Mục đích gửi tiền</label>
+                                <div class="intent-grid">
+                                    @if($coTheDatCoc)
+                                        <label class="intent-card">
+                                            <input type="radio" name="loai_yeu_cau" value="coc_phong" class="form-check-input mt-1" @checked($loaiYeuCauDangChon === 'coc_phong')>
+                                            <div>
+                                                <div class="fw-semibold">Cọc phòng</div>
+                                                <div class="small text-muted">Tối đa {{ number_format((float) $soTienConThieuCoc, 0, ',', '.') }} VNĐ.</div>
+                                            </div>
+                                        </label>
+                                    @endif
+
+                                    <label class="intent-card">
+                                        <input type="radio" name="loai_yeu_cau" value="thanh_toan_them" class="form-check-input mt-1" @checked($loaiYeuCauDangChon === 'thanh_toan_them')>
+                                        <div>
+                                            <div class="fw-semibold">Thanh toán thêm</div>
+                                            <div class="small text-muted">Thanh toán thêm cho hóa đơn.</div>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label">Số tiền gửi</label>
                                 <input
+                                    id="customer-payment-amount"
                                     type="number"
                                     min="1000"
                                     step="1000"
                                     name="so_tien"
                                     class="form-control"
-                                    value="{{ old('so_tien', (int) $soTienConLaiCoTheGuiYeuCau) }}"
+                                    value="{{ old('so_tien', $soTienMacDinh) }}"
                                     required
                                 >
-                                <div class="form-text">Số tiền tối đa có thể gửi hiện tại: {{ number_format((float) $soTienConLaiCoTheGuiYeuCau, 0, ',', '.') }} VNĐ.</div>
+                                <div class="form-text">Tối đa {{ number_format((float) $soTienConLaiCoTheGuiYeuCau, 0, ',', '.') }} VNĐ.</div>
+
+                                <div class="quick-actions">
+                                    @if($coTheDatCoc)
+                                        <button type="button" class="btn btn-sm btn-outline-info js-apply-amount" data-amount="{{ (int) $soTienMacDinhChoCoc }}" data-mode="coc_phong">
+                                            Điền mức cọc {{ number_format((float) $soTienMacDinhChoCoc, 0, ',', '.') }} VNĐ
+                                        </button>
+                                    @endif
+
+                                    <button type="button" class="btn btn-sm btn-outline-secondary js-apply-amount" data-amount="{{ (int) $soTienMacDinhChoThanhToan }}" data-mode="thanh_toan_them">
+                                        Điền phần còn lại
+                                    </button>
+                                </div>
                             </div>
 
                             <div class="col-12">
@@ -232,7 +350,7 @@
 
                             <div class="col-12">
                                 <label class="form-label">Mã tham chiếu giao dịch</label>
-                                <input type="text" name="ma_tham_chieu" class="form-control" value="{{ old('ma_tham_chieu') }}" placeholder="Ví dụ: UTR123456, mã QR, mã giao dịch ngân hàng">
+                                <input type="text" name="ma_tham_chieu" class="form-control" value="{{ old('ma_tham_chieu') }}" placeholder="Ví dụ: mã ngân hàng, QR...">
                             </div>
 
                             <div class="col-12">
@@ -253,7 +371,7 @@
                     <div class="d-flex flex-wrap justify-content-between gap-3 mb-3">
                         <div>
                             <h2 class="h5 mb-1">Lịch sử giao dịch</h2>
-                            <p class="text-muted small mb-0">Tất cả giao dịch đã tạo cho hóa đơn này, bao gồm yêu cầu từ khách và giao dịch nội bộ.</p>
+                            <p class="text-muted small mb-0">Các giao dịch của hóa đơn.</p>
                         </div>
                     </div>
 
@@ -293,7 +411,7 @@
                                                 <div class="small text-muted">Xử lý bởi {{ $thanhToan->nguoiXuLy->ho_ten }}</div>
                                                 <div class="small text-muted">{{ optional($thanhToan->thoi_diem_xu_ly)->format('d/m/Y H:i') ?? '-' }}</div>
                                             @elseif($thanhToan->trang_thai === 'cho_xu_ly')
-                                                <div class="small text-warning">Đang chờ bộ phận nội bộ đối soát</div>
+                                                <div class="small text-warning">Đang chờ xác nhận</div>
                                             @endif
                                         </td>
                                     </tr>
@@ -310,3 +428,26 @@
         </div>
     </div>
 @endsection
+
+@push('scripts')
+    <script>
+        document.querySelectorAll('.js-apply-amount').forEach((button) => {
+            button.addEventListener('click', () => {
+                const amountInput = document.getElementById('customer-payment-amount');
+                const amount = button.dataset.amount;
+                const mode = button.dataset.mode;
+
+                if (amountInput) {
+                    amountInput.value = amount;
+                }
+
+                if (mode) {
+                    const radio = document.querySelector(`input[name="loai_yeu_cau"][value="${mode}"]`);
+                    if (radio) {
+                        radio.checked = true;
+                    }
+                }
+            });
+        });
+    </script>
+@endpush
